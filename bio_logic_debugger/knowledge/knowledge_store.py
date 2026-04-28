@@ -63,6 +63,7 @@ def trait_to_dict(t: Trait) -> dict:
         "typical_range": list(t.typical_range) if t.typical_range else [None, None],
         "tags": t.tags,
         "species": t.species,
+        "confidence": t.confidence,
     }
 
 
@@ -77,6 +78,7 @@ def trait_from_dict(d: dict) -> Trait:
         typical_range=(r[0], r[1]) if isinstance(r, list) else (None, None),
         tags=d.get("tags", []),
         species=d.get("species", "通用"),
+        confidence=d.get("confidence", 1.0),
     )
 
 
@@ -426,4 +428,14 @@ def load_and_merge(
         user_constraints=user_constraints,
         user_anti_patterns=user_anti_patterns,
     )
-    return deserialize_all(merged)
+    result = deserialize_all(merged)
+
+    # 应用用户调整的权重
+    try:
+        from bio_logic_debugger.knowledge.weight_store import apply_weights_to_engine
+        # 注意：此时 engine 还未创建，无法直接调用。
+        # 权重的应用延迟到 engine 注册所有知识之后，在 app.py 中处理。
+    except ImportError:
+        pass
+
+    return result

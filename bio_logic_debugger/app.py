@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import streamlit as st
 
+from bio_logic_debugger import __version__
 from bio_logic_debugger.core.domain import (
     AntiPattern,
     BreedingGoal,
@@ -22,6 +23,10 @@ from bio_logic_debugger.core.domain import (
 from bio_logic_debugger.core.engine import BioLogicEngine
 from bio_logic_debugger.knowledge import knowledge_store
 from bio_logic_debugger.knowledge.knowledge_store import load_and_merge
+from bio_logic_debugger.knowledge.weight_store import (
+    load_weights as load_user_weights,
+    save_weights as save_user_weights,
+)
 
 st.set_page_config(
     page_title="让邺城燃烧 — Bio-Logic Debugger",
@@ -60,18 +65,46 @@ def get_engine() -> BioLogicEngine:
 
 engine = get_engine()
 
+# 加载用户权重并应用到引擎
+try:
+    from bio_logic_debugger.knowledge.weight_store import apply_weights_to_engine
+    apply_weights_to_engine(engine)
+except Exception:
+    pass
 
-# ── 启动时静默同步社区知识库 ──────────────────────────────
+
+# ── 启动时静默同步社区知识库（仅检查，不自动刷新） ──────────
 
 if "_sync_done" not in st.session_state:
     try:
-        if knowledge_store.sync_from_community():
-            # 重新加载引擎
-            st.cache_resource.clear()
-            engine = get_engine()
+        st.session_state._sync_result = knowledge_store.sync_from_community()
         st.session_state._sync_done = True
-    except Exception:
+    except Exception as e:
+        st.session_state._sync_result = False
         st.session_state._sync_done = True
+
+# 同步完成后弹通知，仅首次显示
+if st.session_state.get("_sync_result") and st.session_state.get("_sync_done"):
+    if "_notified" not in st.session_state:
+        st.session_state._notified = True
+        community_traits = len(knowledge_store.load_community().get("traits", []))
+        if community_traits > 0:
+            st.toast(f"🌾 社区知识库已同步（{community_traits} 个性状）", icon="📦")
+        col_bar, col_btn = st.columns([3, 1])
+        with col_bar:
+            st.info("📦 社区知识库已更新 — 点击右侧按钮重新加载引擎", icon="ℹ️")
+        with col_btn:
+            if st.button("🔄 重新加载引擎", use_container_width=True, type="primary"):
+                st.cache_resource.clear()
+                st.session_state._sync_result = False  # 隐藏提示
+                st.rerun()
+
+# ── 版本更新提示（首次启动显示） ──────────────────────────
+
+if "_version_notified" not in st.session_state:
+    st.session_state._version_notified = True
+    if __version__ == "0.2.0":
+        st.toast("🎉 已更新至 v0.2.0 — 新增自动论文检索与数据权重调整", icon="✨")
 
 
 def trait_label(trait_id: str) -> str:
@@ -92,6 +125,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 st.sidebar.markdown("**Bio-Logic Debugger**")
+st.sidebar.caption(f"v{__version__}")
 st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
@@ -119,11 +153,34 @@ with st.sidebar:
     last_sync = knowledge_store.get_last_sync_time()
     has_community = knowledge_store.has_community_data()
 
-    sync_status = "✅ 已同步" if has_community else "⚪ 内置模式"
+    if has_community:
+        sync_status = "✅ 已同步"
+    else:
+        sync_status = "⚪ 内置模式（未同步）"
     st.caption(f"{sync_status}")
     if last_sync:
         st.caption(f"同步于 {last_sync}")
+    else:
+        st.caption("从未同步")
     st.caption(f"性状 {trait_count} / 关联 {corr_count} / 反模式 {ap_count}")
+    # 已检索论文数
+    try:
+        from bio_logic_debugger.knowledge.paper_search import load_seen_papers
+        seen_count = len(load_seen_papers())
+        st.caption(f"已检索 {seen_count} 篇论文")
+    except Exception:
+        pass
+
+    # 同步按钮
+    if st.button("🔄 检查更新", use_container_width=True, key="sidebar_sync"):
+        with st.spinner("检查社区知识库..."):
+            ok = knowledge_store.sync_from_community()
+            if ok:
+                st.cache_resource.clear()
+                st.toast("✅ 社区知识库已更新，引擎已重新加载", icon="📦")
+                st.rerun()
+            else:
+                st.toast("⚠️ 同步失败，请检查网络", icon="⚠️")
 
 # ══════════════════════════════════════════════════════════
 # 页面 1: 育种目标验证
@@ -599,7 +656,96 @@ elif page == "📚 文献与知识库":
                 st.image(chart_img, caption="已上传的图表", use_container_width=True)
                 st.session_state.chart_image_bytes = chart_img.read()
 
-        # 开始分析
+        # ── 自动检索论文 ──────────────────────────────
+        with st.expander("🔄 自动检索论文（从知识库关键词搜索 CrossRef）"):
+            # 从知识库提取关键词
+            if "_search_keywords" not in st.session_state:
+                from bio_logic_debugger.knowledge.paper_search import extract_keywords_from_knowledge
+                kw = extract_keywords_from_knowledge(
+                    list(engine._traits.values()),
+                    max_keywords=10,
+                )
+                st.session_state._search_keywords = kw
+
+            st.markdown("**检索关键词**（可编辑）：")
+            edited_keywords = st.text_input(
+                "关键词（逗号分隔）",
+                value=", ".join(st.session_state._search_keywords),
+                key="search_kw_input",
+                label_visibility="collapsed",
+            )
+            kw_list = [k.strip() for k in edited_keywords.split(",") if k.strip()]
+
+            col_s1, col_s2 = st.columns([1, 3])
+            with col_s1:
+                rows_per = st.number_input("每批数量", min_value=3, max_value=20, value=8, step=1)
+            with col_s2:
+                search_btn = st.button("🔍 开始检索", type="primary", use_container_width=True)
+
+            if search_btn:
+                from bio_logic_debugger.knowledge.paper_search import (
+                    load_seen_papers,
+                    mark_papers_seen,
+                    search_all_keywords,
+                )
+                seen = load_seen_papers()
+                with st.spinner(f"正在用 {len(kw_list)} 个关键词检索 CrossRef..."):
+                    papers = search_all_keywords(kw_list, rows_per_query=rows_per, seen_dois=seen)
+
+                if not papers:
+                    st.info("没有找到新的论文（所有结果已检索过）")
+                else:
+                    st.success(f"找到 {len(papers)} 篇新论文")
+                    st.session_state._auto_search_results = papers
+
+            # 显示检索结果
+            if "_auto_search_results" in st.session_state:
+                papers = st.session_state._auto_search_results
+                if papers:
+                    st.markdown("**检索结果（勾选要分析的论文）：**")
+                    selected_papers = []
+                    for i, p in enumerate(papers):
+                        c1, c2 = st.columns([0.05, 1])
+                        with c1:
+                            checked = st.checkbox("", key=f"paper_{i}")
+                        with c2:
+                            meta = f"**{p.get('title', '未知')}**"
+                            authors = "、".join(p.get("authors", []))[:60]
+                            if authors:
+                                meta += f"　_{authors}_"
+                            meta += f"　({p.get('year', '?')})"
+                            if p.get("journal"):
+                                meta += f"　`{p['journal']}`"
+                            if p.get("doi"):
+                                meta += f"　DOI: {p['doi']}"
+                            st.markdown(meta)
+                            if p.get("abstract"):
+                                abstract_preview = p["abstract"][:200].replace("<", "&lt;").replace(">", "&gt;")
+                                st.caption(f"摘要：{abstract_preview}…" if len(p["abstract"]) > 200 else f"摘要：{abstract_preview}")
+                        if checked:
+                            selected_papers.append(p)
+
+                    if selected_papers:
+                        if st.button("📥 分析选中论文", use_container_width=True):
+                            from bio_logic_debugger.knowledge.paper_search import mark_papers_seen
+                            from bio_logic_debugger.knowledge.paper_analyzer import analyze_text
+                            # 合并选中论文的摘要
+                            combined = "\n\n".join(
+                                p.get("abstract", "") for p in selected_papers
+                            )
+                            if combined.strip():
+                                with st.spinner("分析中..."):
+                                    extracted = analyze_text(combined, llm_caller=None)
+                                st.session_state.extracted_items = extracted
+                                st.session_state._auto_search_results = []  # 清空结果
+                                # 标记已见
+                                mark_papers_seen(selected_papers)
+                                st.success(f"分析完成，共提取 {len(extracted)} 条，请在上方「分析结果」区域审核导入")
+                                st.rerun()
+                            else:
+                                st.warning("选中论文无可用摘要")
+
+        # ── 开始分析 ──
         has_text = "paper_raw_text" in st.session_state and st.session_state.paper_raw_text.strip()
 
         if has_text:
@@ -761,12 +907,13 @@ elif page == "📚 文献与知识库":
         st.subheader("知识库管理")
 
         # 当前状态
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3 = st.columns(3)
         col1.metric("内置性状", len(knowledge_store.load_builtin().get("traits", [])), border=True)
         col2.metric("社区性状", len(knowledge_store.load_community().get("traits", [])), border=True)
         col3.metric("用户扩充", len(st.session_state.get("_user_traits", [])), border=True)
+
         sync_time = knowledge_store.get_last_sync_time() or "从未同步"
-        col4.metric("最后同步", sync_time, border=True)
+        st.caption(f"📅 最后同步：{sync_time}")
 
         # 同步按钮
         if st.button("🔄 手动同步社区知识库", use_container_width=True):
@@ -823,6 +970,71 @@ elif page == "📚 文献与知识库":
 
         else:
             st.info("暂无用户扩充的知识。在「导入文献分析」Tab 中分析论文后导入即可。")
+
+        st.divider()
+
+        # ── 权重调整 ──────────────────────────────────
+        st.subheader("⚖️ 数据权重调整")
+        st.caption("调整每条知识对验证结果的影响程度。降低不可靠知识的权重可减少误报。")
+
+        user_weights = load_user_weights()
+
+        # 性状权重
+        with st.expander(f"🧬 性状权重（{len(engine._traits)} 条）"):
+            st.caption("低置信度的性状，其范围越界警告将降级为 INFO")
+            trait_weights = {}
+            for tid, t in sorted(engine._traits.items()):
+                default_conf = user_weights.get("traits", {}).get(tid, t.confidence)
+                w = st.slider(
+                    f"{t.name}（{t.category}）",
+                    min_value=0.0, max_value=1.0, value=default_conf, step=0.1,
+                    key=f"wt_trait_{tid}",
+                )
+                if w != 1.0:
+                    trait_weights[tid] = w
+
+        # 关联权重
+        with st.expander(f"🔗 关联权重（{len(engine._correlations)} 条）"):
+            st.caption("低置信度的关联，验证时有效强度降低，警告等级相应降级")
+            corr_weights = {}
+            for c in engine._correlations:
+                name_a = engine._trait_name(c.trait_a)
+                name_b = engine._trait_name(c.trait_b)
+                key = f"{c.trait_a}__{c.trait_b}" if c.trait_a < c.trait_b else f"{c.trait_b}__{c.trait_a}"
+                default_conf = user_weights.get("correlations", {}).get(key, c.confidence)
+                w = st.slider(
+                    f"{name_a} ↔ {name_b}（r={c.strength}）",
+                    min_value=0.0, max_value=1.0, value=default_conf, step=0.1,
+                    key=f"wt_corr_{key}",
+                )
+                if w != 1.0:
+                    corr_weights[key] = w
+
+        # 约束权重
+        with st.expander(f"📜 约束权重（{len(engine._constraints)} 条）"):
+            st.caption("低置信度的约束，违反时严重等级自动降级")
+            cstr_weights = {}
+            for c in engine._constraints:
+                default_conf = user_weights.get("constraints", {}).get(c.id, c.confidence)
+                w = st.slider(
+                    f"{c.name}（{c.severity.name}）",
+                    min_value=0.0, max_value=1.0, value=default_conf, step=0.1,
+                    key=f"wt_cstr_{c.id}",
+                )
+                if w != 1.0:
+                    cstr_weights[c.id] = w
+
+        # 保存按钮
+        if st.button("💾 保存权重并重新加载引擎", type="primary", use_container_width=True):
+            new_weights = {
+                "traits": trait_weights,
+                "correlations": corr_weights,
+                "constraints": cstr_weights,
+            }
+            save_user_weights(new_weights)
+            st.cache_resource.clear()
+            st.success("✅ 权重已保存，引擎已重新加载！")
+            st.rerun()
 
     # ── Tab 3: 贡献指南 ──────────────────────────────
 

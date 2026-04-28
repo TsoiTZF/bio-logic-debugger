@@ -18,6 +18,37 @@ def _build_headers() -> dict[str, str]:
     return {"User-Agent": USER_AGENT}
 
 
+def search_by_keywords(
+    keywords: list[str],
+    rows: int = 8,
+) -> list[dict[str, Any]]:
+    """按关键词批量搜索论文（使用 query.bibliographic）"""
+    try:
+        import httpx
+    except ImportError:
+        raise ImportError("需要安装 httpx: pip install httpx>=0.25.0")
+
+    query = " ".join(keywords)
+    params = {
+        "query.bibliographic": query,
+        "rows": min(rows, 20),
+    }
+    try:
+        resp = httpx.get(
+            CROSSREF_BASE,
+            params=params,
+            headers=_build_headers(),
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        items = data.get("message", {}).get("items", [])
+        return [_parse_crossref_item(item) for item in items]
+    except Exception as e:
+        logger.warning(f"CrossRef 关键词检索失败: {e}")
+        return []
+
+
 def search_by_title(title: str) -> Optional[dict[str, Any]]:
     """按论文标题搜索，返回第一条匹配的元数据"""
     try:

@@ -83,6 +83,7 @@ class Trait:
     typical_range: tuple[float | None, float | None] = (None, None)
     tags: list[str] = field(default_factory=list)
     species: str = "通用"
+    confidence: float = 1.0
 
 
 # ═══════════════════════════════════════════════════════════════

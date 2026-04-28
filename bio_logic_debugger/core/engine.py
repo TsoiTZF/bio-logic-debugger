@@ -208,9 +208,15 @@ class BioLogicEngine:
             lo, hi = trait.typical_range
             if target.desired_value is not None and lo is not None and hi is not None:
                 if target.desired_value < lo or target.desired_value > hi:
+                    # 低置信度的 trait，范围警告降级
+                    range_severity = (
+                        ConstraintSeverity.INFO
+                        if trait.confidence < 0.5
+                        else ConstraintSeverity.WARNING
+                    )
                     ctx.violations.append(Violation(
                         constraint_id=f"range_check.{trait.id}",
-                        severity=ConstraintSeverity.WARNING,
+                        severity=range_severity,
                         title=f"目标值超出 {trait.name} 的典型范围",
                         description=(
                             f"'{trait.name}' 的典型范围是 [{lo}, {hi}] {trait.unit}，"
@@ -270,11 +276,13 @@ class BioLogicEngine:
                     continue
 
                 if user_wants_both_high:
+                    # 用有效强度（strength × confidence）决定严重等级
+                    effective_strength = abs(corr.strength) * corr.confidence
                     severity = (
                         ConstraintSeverity.FATAL
-                        if abs(corr.strength) >= 0.7
+                        if effective_strength >= 0.7
                         else ConstraintSeverity.SEVERE
-                        if abs(corr.strength) >= 0.5
+                        if effective_strength >= 0.5
                         else ConstraintSeverity.WARNING
                     )
 
@@ -362,7 +370,7 @@ class BioLogicEngine:
 
             ctx.violations.append(Violation(
                 constraint_id=constraint.id,
-                severity=constraint.severity,
+                severity=self._downgrade_severity(constraint.severity, constraint.confidence),
                 title=constraint.name,
                 description=constraint.description,
                 mechanism=constraint.consequence,
@@ -453,6 +461,31 @@ class BioLogicEngine:
             avg = (target.range_min + target.range_max) / 2
             return avg > 0  # 保守估计
         return False
+
+    @staticmethod
+    def _downgrade_severity(
+        original: ConstraintSeverity, confidence: float,
+    ) -> ConstraintSeverity:
+        """根据置信度降级约束违反等级"""
+        if confidence >= 0.6:
+            return original
+        if confidence >= 0.3:
+            # 中等置信度：降一级
+            mapping = {
+                ConstraintSeverity.FATAL: ConstraintSeverity.FATAL,
+                ConstraintSeverity.SEVERE: ConstraintSeverity.WARNING,
+                ConstraintSeverity.WARNING: ConstraintSeverity.INFO,
+                ConstraintSeverity.INFO: ConstraintSeverity.INFO,
+            }
+            return mapping.get(original, original)
+        # 低置信度：降两级
+        mapping = {
+            ConstraintSeverity.FATAL: ConstraintSeverity.SEVERE,
+            ConstraintSeverity.SEVERE: ConstraintSeverity.WARNING,
+            ConstraintSeverity.WARNING: ConstraintSeverity.INFO,
+            ConstraintSeverity.INFO: ConstraintSeverity.INFO,
+        }
+        return mapping.get(original, original)
 
     @staticmethod
     def _corr_type_label(corr: TraitCorrelation) -> str:
