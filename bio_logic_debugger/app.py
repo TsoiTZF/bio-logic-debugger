@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+import json
 import sys
 import os
 
@@ -19,12 +20,8 @@ from bio_logic_debugger.core.domain import (
     TraitTarget,
 )
 from bio_logic_debugger.core.engine import BioLogicEngine
-from bio_logic_debugger.knowledge.rice_knowledge import (
-    ANTI_PATTERNS,
-    CONSTRAINTS,
-    CORRELATIONS,
-    TRAITS,
-)
+from bio_logic_debugger.knowledge import knowledge_store
+from bio_logic_debugger.knowledge.knowledge_store import load_and_merge
 
 st.set_page_config(
     page_title="让邺城燃烧 — Bio-Logic Debugger",
@@ -39,14 +36,42 @@ st.set_page_config(
 @st.cache_resource
 def get_engine() -> BioLogicEngine:
     engine = BioLogicEngine()
-    engine.register_traits(TRAITS)
-    engine.register_correlations(CORRELATIONS)
-    engine.register_constraints(CONSTRAINTS)
-    engine.register_anti_patterns(ANTI_PATTERNS)
+    try:
+        traits, correlations, constraints, anti_patterns = load_and_merge()
+        engine.register_traits(traits)
+        engine.register_correlations(correlations)
+        engine.register_constraints(constraints)
+        engine.register_anti_patterns(anti_patterns)
+    except Exception as e:
+        # fallback to builtin if merge fails
+        from bio_logic_debugger.knowledge.rice_knowledge import (
+            ANTI_PATTERNS as BUILTIN_AP,
+            CONSTRAINTS as BUILTIN_CONS,
+            CORRELATIONS as BUILTIN_CORRS,
+            TRAITS as BUILTIN_TRAITS,
+        )
+        engine.register_traits(BUILTIN_TRAITS)
+        engine.register_correlations(BUILTIN_CORRS)
+        engine.register_constraints(BUILTIN_CONS)
+        engine.register_anti_patterns(BUILTIN_AP)
+        st.warning(f"知识库合并失败，使用内置兜底: {e}")
     return engine
 
 
 engine = get_engine()
+
+
+# ── 启动时静默同步社区知识库 ──────────────────────────────
+
+if "_sync_done" not in st.session_state:
+    try:
+        if knowledge_store.sync_from_community():
+            # 重新加载引擎
+            st.cache_resource.clear()
+            engine = get_engine()
+        st.session_state._sync_done = True
+    except Exception:
+        st.session_state._sync_done = True
 
 
 def trait_label(trait_id: str) -> str:
@@ -71,7 +96,7 @@ st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
     "导航",
-    ["育种目标验证", "性状浏览器", "反模式库", "约束规则"],
+    ["育种目标验证", "性状浏览器", "反模式库", "约束规则", "📚 文献与知识库"],
     label_visibility="collapsed",
 )
 
@@ -82,6 +107,23 @@ st.sidebar.caption(
 st.sidebar.caption(
     "⚠️ 当前运行在本地网络，仅建议在受信任的内网使用。"
 )
+
+# ── 侧边栏知识库状态 ────────────────────────────────────
+
+st.sidebar.markdown("---")
+st.sidebar.caption("📦 知识库状态")
+with st.sidebar:
+    trait_count = len(engine._traits)
+    corr_count = len(engine._correlations)
+    ap_count = len(engine._anti_patterns._patterns)
+    last_sync = knowledge_store.get_last_sync_time()
+    has_community = knowledge_store.has_community_data()
+
+    sync_status = "✅ 已同步" if has_community else "⚪ 内置模式"
+    st.caption(f"{sync_status}")
+    if last_sync:
+        st.caption(f"同步于 {last_sync}")
+    st.caption(f"性状 {trait_count} / 关联 {corr_count} / 反模式 {ap_count}")
 
 # ══════════════════════════════════════════════════════════
 # 页面 1: 育种目标验证
@@ -465,3 +507,359 @@ elif page == "约束规则":
                 if constraint.condition_expr:
                     st.code(constraint.condition_expr, language="text")
                 st.caption(f"置信度：{constraint.confidence:.0%}")
+
+# ══════════════════════════════════════════════════════════
+# 页面 5: 文献与知识库
+# ══════════════════════════════════════════════════════════
+
+elif page == "📚 文献与知识库":
+    st.title("📚 文献与知识库")
+    st.markdown("上传论文、分析图表、管理知识库。")
+
+    tab1, tab2, tab3 = st.tabs(["📄 导入文献分析", "📦 知识库管理", "🤝 贡献指南"])
+
+    # ── Tab 1: 导入文献分析 ──────────────────────────────
+
+    with tab1:
+        st.subheader("导入文献分析")
+        st.markdown("从论文中提取性状、关联和约束，审核后导入知识库。")
+
+        # 来源选择
+        source_method = st.radio(
+            "论文来源",
+            ["上传 PDF", "DOI / 标题搜索"],
+            horizontal=True,
+        )
+
+        pdf_bytes = None
+        paper_meta = {}
+
+        if source_method == "上传 PDF":
+            uploaded = st.file_uploader(
+                "上传 PDF 文件", type=["pdf"],
+                help="支持标准的学术论文 PDF",
+            )
+            if uploaded:
+                pdf_bytes = uploaded.read()
+                st.success(f"已上传：{uploaded.name} ({len(pdf_bytes) // 1024} KB)")
+                # 提取文本
+                from bio_logic_debugger.knowledge.pdf_parser import extract_text
+                with st.spinner("提取文本中..."):
+                    raw_text = extract_text(pdf_bytes)
+                st.info(f"提取到 {len(raw_text)} 字符")
+                st.session_state.paper_raw_text = raw_text
+
+        else:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                search_input = st.text_input(
+                    "DOI 或论文标题",
+                    placeholder="10.1007/s00122-021-03867-w 或输入标题...",
+                )
+            with col2:
+                search_btn = st.button("🔍 检索", use_container_width=True)
+
+            if search_btn and search_input:
+                from bio_logic_debugger.knowledge.doi_fetcher import (
+                    fetch_by_doi, search_by_title,
+                )
+                with st.spinner("检索中..."):
+                    # 检测是否为 DOI
+                    if search_input.startswith("10."):
+                        paper_meta = fetch_by_doi(search_input) or {}
+                    else:
+                        paper_meta = search_by_title(search_input) or {}
+
+                if paper_meta:
+                    st.success(f"找到：{paper_meta.get('title', '未知')}")
+                    st.session_state.paper_meta = paper_meta
+                    st.session_state.paper_raw_text = paper_meta.get("abstract", "")
+                else:
+                    st.warning("未找到相关论文")
+
+            # 显示已检索的元数据
+            if "paper_meta" in st.session_state and st.session_state.paper_meta:
+                pm = st.session_state.paper_meta
+                with st.container(border=True):
+                    st.markdown(f"**{pm.get('title')}**")
+                    cols = st.columns(4)
+                    cols[0].caption(f"作者：{'、'.join(pm.get('authors', []))}")
+                    cols[1].caption(f"期刊：{pm.get('journal', 'N/A')}")
+                    cols[2].caption(f"年份：{pm.get('year', 'N/A')}")
+                    if pm.get("doi"):
+                        cols[3].caption(f"DOI：{pm['doi']}")
+
+        # 图表分析（可选）
+        with st.expander("📊 图表分析（可选）"):
+            chart_img = st.file_uploader(
+                "上传图表图片（如相关性热图、箱线图等）",
+                type=["png", "jpg", "jpeg", "gif", "webp"],
+            )
+            if chart_img:
+                st.image(chart_img, caption="已上传的图表", use_container_width=True)
+                st.session_state.chart_image_bytes = chart_img.read()
+
+        # 开始分析
+        has_text = "paper_raw_text" in st.session_state and st.session_state.paper_raw_text.strip()
+
+        if has_text:
+            col_a, col_b = st.columns([1, 3])
+            with col_a:
+                llm_for_extract = st.checkbox(
+                    "启用 LLM 提取（需配置 API Key）", value=False,
+                    help="通过 LLM 提取更精确的结构化信息",
+                )
+            with col_b:
+                analyze_btn = st.button("🚀 开始分析", type="primary", use_container_width=True)
+
+            if analyze_btn:
+                from bio_logic_debugger.knowledge.paper_analyzer import analyze_text
+
+                llm_caller = None
+                if llm_for_extract:
+                    api_key = st.session_state.get("_extract_api_key", "")
+                    base_url = st.session_state.get("_extract_base_url", "")
+                    model = st.session_state.get("_extract_model", "")
+                    if api_key:
+                        from bio_logic_debugger.llm.reasoner import LLMConfig, LLMReasoner
+                        config = LLMConfig(
+                            api_key=api_key,
+                            base_url=base_url or None,
+                            model=model or None,
+                        )
+                        reasoner = LLMReasoner(config=config)
+                        llm_caller = reasoner.extract_knowledge
+
+                with st.spinner("分析论文中..."):
+                    extracted = analyze_text(
+                        st.session_state.paper_raw_text,
+                        llm_caller=llm_caller,
+                    )
+
+                st.session_state.extracted_items = extracted
+                st.success(f"分析完成，共提取 {len(extracted)} 条")
+
+        # LLM API 配置（分析用）
+        if has_text and llm_for_extract:
+            with st.expander("⚙️ LLM 配置"):
+                st.text_input(
+                    "API Key", type="password",
+                    key="_extract_api_key",
+                    placeholder="sk-... 或设置 BIO_LLM_API_KEY",
+                )
+                st.text_input(
+                    "Base URL",
+                    key="_extract_base_url",
+                    placeholder="https://api.deepseek.com/v1",
+                )
+                st.text_input("模型名", key="_extract_model", placeholder="deepseek-chat")
+
+        # 展示分析结果
+        if "extracted_items" in st.session_state and st.session_state.extracted_items:
+            items = st.session_state.extracted_items
+            st.divider()
+            st.subheader("分析结果")
+
+            # 分类展示
+            categories = {"trait": "🧬 性状", "correlation": "🔗 关联", "constraint": "📜 约束"}
+            selected_ids = set()
+
+            for cat_key, cat_label in categories.items():
+                cat_items = [it for it in items if it.item_type == cat_key]
+                if not cat_items:
+                    continue
+
+                with st.expander(f"{cat_label}（{len(cat_items)} 条）", expanded=True):
+                    for idx, item in enumerate(cat_items):
+                        item_key = f"{cat_key}_{idx}"
+                        checked = st.checkbox(
+                            f"**{item.data.get('name') or item.data.get('trait_a', '未知')}**　"
+                            f"<span style='color:#888;font-size:0.8em;'>置信度 {item.confidence:.0%}</span>",
+                            value=item.selected,
+                            key=f"select_{item_key}",
+                        )
+                        if checked:
+                            selected_ids.add(item_key)
+
+                        # 显示详情
+                        detail_parts = []
+                        if item.data.get("trait_b"):
+                            detail_parts.append(
+                                f"{item.data['trait_a']} ↔ {item.data['trait_b']}　"
+                                f"类型：{item.data.get('type', '')}　"
+                                f"强度：{item.data.get('strength', 0)}"
+                            )
+                        if item.data.get("description"):
+                            detail_parts.append(f"描述：{item.data['description'][:120]}")
+                        if item.data.get("range"):
+                            detail_parts.append(
+                                f"范围：{item.data['range']} {item.data.get('unit', '')}"
+                            )
+                        if item.source_sentence:
+                            detail_parts.append(
+                                f"<span style='color:#999;font-style:italic;'>"
+                                f"原文：{item.source_sentence[:100]}</span>"
+                            )
+                        if detail_parts:
+                            st.markdown("<br>".join(detail_parts), unsafe_allow_html=True)
+                        st.markdown("---")
+
+            # 导入按钮
+            if st.button("📥 导入到知识库", type="primary", use_container_width=True):
+                from bio_logic_debugger.knowledge.paper_analyzer import (
+                    items_to_constraints,
+                    items_to_correlations,
+                    items_to_traits,
+                )
+
+                # 收集勾选项
+                selected_items = []
+                for cat_key in categories:
+                    cat_items = [it for it in items if it.item_type == cat_key]
+                    for idx, item in enumerate(cat_items):
+                        if f"{cat_key}_{idx}" in selected_ids:
+                            item.selected = True
+                            selected_items.append(item)
+
+                if not selected_items:
+                    st.warning("请先勾选要导入的项")
+                else:
+                    # 转换为知识库格式
+                    new_traits = items_to_traits(selected_items)
+                    new_corrs = items_to_correlations(selected_items)
+                    new_constraints = items_to_constraints(selected_items)
+
+                    # 注册到引擎
+                    from bio_logic_debugger.knowledge.knowledge_store import (
+                        constraint_from_dict,
+                        correlation_from_dict,
+                        trait_from_dict,
+                    )
+                    for d in new_traits:
+                        engine.register_trait(trait_from_dict(d))
+                    for d in new_corrs:
+                        engine.register_correlation(correlation_from_dict(d))
+                    for d in new_constraints:
+                        engine.register_constraint(constraint_from_dict(d))
+
+                    # 保存到 session_state 用户扩充列表
+                    if "_user_traits" not in st.session_state:
+                        st.session_state._user_traits = []
+                        st.session_state._user_corrs = []
+                        st.session_state._user_constraints = []
+
+                    st.session_state._user_traits.extend(new_traits)
+                    st.session_state._user_corrs.extend(new_corrs)
+                    st.session_state._user_constraints.extend(new_constraints)
+
+                    st.success(f"✅ 已导入 {len(selected_items)} 条到知识库！")
+                    st.rerun()
+
+    # ── Tab 2: 知识库管理 ──────────────────────────────
+
+    with tab2:
+        st.subheader("知识库管理")
+
+        # 当前状态
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric("内置性状", len(knowledge_store.load_builtin().get("traits", [])), border=True)
+        col2.metric("社区性状", len(knowledge_store.load_community().get("traits", [])), border=True)
+        col3.metric("用户扩充", len(st.session_state.get("_user_traits", [])), border=True)
+        sync_time = knowledge_store.get_last_sync_time() or "从未同步"
+        col4.metric("最后同步", sync_time, border=True)
+
+        # 同步按钮
+        if st.button("🔄 手动同步社区知识库", use_container_width=True):
+            with st.spinner("同步中..."):
+                if knowledge_store.sync_from_community():
+                    st.success("同步完成！正在重新加载引擎...")
+                    # 清理缓存，重新加载
+                    st.cache_resource.clear()
+                    st.rerun()
+                else:
+                    st.warning("部分同步失败，请检查网络连接")
+
+        st.divider()
+
+        # 用户扩充列表
+        user_traits = st.session_state.get("_user_traits", [])
+        user_corrs = st.session_state.get("_user_corrs", [])
+        user_constraints = st.session_state.get("_user_constraints", [])
+
+        if user_traits or user_corrs or user_constraints:
+            st.markdown("**用户扩充的知识：**")
+
+            if user_traits:
+                with st.expander(f"🧬 用户性状（{len(user_traits)} 条）"):
+                    for t in user_traits:
+                        st.markdown(f"- **{t.get('name')}**　`{t.get('id')}`　范围：{t.get('typical_range')} {t.get('unit', '')}")
+
+            if user_corrs:
+                with st.expander(f"🔗 用户关联（{len(user_corrs)} 条）"):
+                    for c in user_corrs:
+                        st.markdown(f"- {c.get('trait_a')} ↔ {c.get('trait_b')}　类型：{c.get('corr_type')}　r={c.get('strength')}")
+
+            if user_constraints:
+                with st.expander(f"📜 用户约束（{len(user_constraints)} 条）"):
+                    for c in user_constraints:
+                        st.markdown(f"- **{c.get('name')}**　等级：{c.get('severity')}")
+
+            # 导出
+            st.divider()
+            if st.button("📤 导出为 JSON", use_container_width=True):
+                exported = knowledge_store.export_user_knowledge(
+                    traits=user_traits,
+                    correlations=user_corrs,
+                    constraints=user_constraints,
+                    anti_patterns=[],
+                )
+                st.download_button(
+                    "⬇️ 下载 JSON 文件",
+                    data=exported,
+                    file_name="user_knowledge_export.json",
+                    mime="application/json",
+                )
+                st.info("将此 JSON 提 PR 到 TsoiTZF/bio-logic-knowledge 仓库即可贡献到社区！")
+
+        else:
+            st.info("暂无用户扩充的知识。在「导入文献分析」Tab 中分析论文后导入即可。")
+
+    # ── Tab 3: 贡献指南 ──────────────────────────────
+
+    with tab3:
+        st.subheader("🤝 贡献知识到社区")
+        st.markdown("""
+        本应用的知识库支持社区共享——你可以将本地提取的知识贡献到社区知识库，
+        让所有用户都能获得最新的育种知识。
+        """)
+
+        with st.container(border=True):
+            st.markdown("### 如何贡献")
+            st.markdown("""
+            1. **提取知识**：在「导入文献分析」Tab 中上传论文，提取性状/关联/约束
+            2. **审核勾选**：检查提取结果，只勾选准确、有用的条目
+            3. **导入到本地**：点击「导入到知识库」确认导入
+            4. **导出 JSON**：切换到「知识库管理」Tab，点击「导出为 JSON」
+            5. **提交 PR**：将导出的 JSON 文件提 Pull Request 到社区仓库：
+
+            ```
+            https://github.com/TsoiTZF/bio-logic-knowledge
+            ```
+            """)
+
+        with st.container(border=True):
+            st.markdown("### 社区仓库结构")
+            st.code("""
+            bio-logic-knowledge/
+            ├── traits.json          # 性状定义
+            ├── correlations.json    # 关联关系
+            ├── constraints.json     # 约束规则
+            ├── anti_patterns.json   # 反模式
+            └── CHANGELOG.md         # 更新日志
+            """)
+
+        st.markdown("---")
+        st.markdown(
+            "💡 **提示**：每次启动 app 时会自动从社区仓库同步最新知识库。"
+            "你也可以在「知识库管理」Tab 中手动触发同步。"
+        )

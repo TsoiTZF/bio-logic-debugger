@@ -1,0 +1,136 @@
+[
+  {
+    "id": "rice_high_yield_low_quality",
+    "name": "高产低质的陷阱",
+    "description": "追求单一产量指标突破的情况下，品质性状（粒型、食味）往往会系统性下降。过去三十年中国优质稻育种的经验表明，在不引入特殊种质资源的条件下，亩产超过 800kg 的品种鲜有达到国标一级优质米的案例。",
+    "trigger_traits": [
+      "rice_yield_per_ha",
+      "rice_grain_length",
+      "rice_amylose_content"
+    ],
+    "severity": "SEVERE",
+    "historical_examples": [
+      "1990s 湖南高产稻推广：产量突出但米质差，市场接受度低",
+      "2000s 部分超级稻品种：产量达标但食味评分偏低，难以形成品牌"
+    ],
+    "failed_approaches": [
+      {
+        "description": "单纯增加穗数追求高产",
+        "reason_failed": "穗数过多导致籽粒充实度下降，整精米率降低"
+      },
+      {
+        "description": "在籼稻背景下导入高产基因不兼顾品质",
+        "reason_failed": "虽然产量提升 10-15%，但垩白度显著增加，外观品质下降"
+      }
+    ],
+    "alternative_directions": [
+      "寻找同时控制产量和品质的主效QTL区间，如 GW7/qGL7 同时增加粒长且不影响产量",
+      "采用分子标记辅助选择，打破产量-品质的连锁累赘",
+      "考虑分步实现：先构建优质基础材料，再叠加产量基因"
+    ],
+    "mechanism": "产量和品质之间存在共同的碳水化合物分配限制。高产需要更多的籽粒库容，而优质需要充足的灌浆物质积累。二者在光合产物分配上构成竞争关系。",
+    "confidence": 0.85,
+    "tags": [],
+    "species": "水稻"
+  },
+  {
+    "id": "rice_extreme_grain_type",
+    "name": "极端粒型的代价",
+    "description": "过度追求特长粒（>8mm）或特宽粒（>3.5mm）往往导致整精米率急剧下降、垩白度升高、以及灌浆不充实。市场对极端粒型的接受度也有限。",
+    "trigger_traits": [
+      "rice_grain_length",
+      "rice_grain_width",
+      "rice_1000_grain_weight"
+    ],
+    "severity": "WARNING",
+    "historical_examples": [
+      "部分长粒籼稻品种：粒长超过 8mm 但整精米率低于 45%",
+      "某些泰国香稻衍生系：过度追求细长粒型导致产量潜力受限"
+    ],
+    "failed_approaches": [
+      {
+        "description": "粒长超过 8.5mm 的选育",
+        "reason_failed": "籽粒灌浆不充实，整精米率低于 40%，且垩白度超过 10%"
+      }
+    ],
+    "alternative_directions": [
+      "将粒长控制在 7.0-7.5mm，兼顾碾磨品质和外观",
+      "粒长和粒宽的协调改良，追求长宽比>3.0 而非绝对长度"
+    ],
+    "mechanism": "籽粒长度超过遗传限制后，胚乳发育过程中背部与腹部的细胞分裂不同步，导致垩白产生。",
+    "confidence": 0.75,
+    "tags": [],
+    "species": "水稻"
+  },
+  {
+    "id": "rice_semi_dwarf_extreme",
+    "name": "过度矮化的产量陷阱",
+    "description": "sd1 半矮秆基因是绿色革命的基础，但并非越矮越好。株高低于 70cm 时，生物量不足导致产量潜力严重受限，且叶片过密影响冠层光合效率。",
+    "trigger_traits": [
+      "rice_plant_height",
+      "rice_yield_per_plant",
+      "rice_lodging_resistance"
+    ],
+    "severity": "WARNING",
+    "historical_examples": [
+      "部分育种项目盲目矮化：株高 60-65cm 品系，产量不到正常品种 70%"
+    ],
+    "failed_approaches": [],
+    "alternative_directions": [
+      "理想株高控制在 90-110cm，配合强秆基因提高抗倒伏性",
+      "探索理想株型（ideotype）概念：不是简单矮化，而是优化株型结构"
+    ],
+    "mechanism": "株高极端降低虽然增强了抗倒伏性，但同时也减少了光合作用器官的总量，限制了生物产量，进而制约经济产量。",
+    "confidence": 0.8,
+    "tags": [],
+    "species": "水稻"
+  },
+  {
+    "id": "rice_precocious_sacrifice",
+    "name": "早熟必低产的经验律",
+    "description": "生育期每缩短 10 天，产量潜力平均下降约 8-12%。这是光合产物积累时间缩短的必然结果。要求在极早熟背景下实现超高产，是已知的育种死胡同。",
+    "trigger_traits": [
+      "rice_heading_days",
+      "rice_yield_per_plant"
+    ],
+    "severity": "SEVERE",
+    "historical_examples": [
+      "东北早熟稻区：生育期 120 天以下品种，产量长期低于中晚熟品种 30%",
+      "华南双季稻早稻：生育期紧逼百天，产量潜力天花板明显"
+    ],
+    "failed_approaches": [],
+    "alternative_directions": [
+      "优化灌浆期光合效率而非延长生育期",
+      "利用强光效基因（如 C4 途径相关基因）弥补生育期短的不足",
+      "考虑温光资源匹配：确保灌浆期处于最佳光温条件下"
+    ],
+    "mechanism": "生育期=光合产物积累时间。在相同的生长速率下，积累时间越长总产量越高。这是作物生理学的基本原理。",
+    "confidence": 0.9,
+    "tags": [],
+    "species": "水稻"
+  },
+  {
+    "id": "rice_total_disease_resistance",
+    "name": "全面抗病的性价比陷阱",
+    "description": "试图同时针对所有主要病害（稻瘟病、白叶枯病、纹枯病、稻曲病等）达到高抗水平，往往导致抗性基因堆叠过多，引起生长势下降和产量损失。这就是所谓的「抗性代价」（resistance cost）。",
+    "trigger_traits": [
+      "rice_blast_resistance",
+      "rice_bacterial_blight_res",
+      "rice_yield_per_plant"
+    ],
+    "severity": "WARNING",
+    "historical_examples": [
+      "IRRI 部分多抗品系：携带 5+ 抗病基因但田间产量缺陷明显"
+    ],
+    "failed_approaches": [],
+    "alternative_directions": [
+      "确定目标区域的主控病害，优先保证对主要病害的抗性",
+      "利用广谱抗病基因（如 Pik, Xa21）而非堆叠多个小种特异性基因",
+      "结合抗病基因和田间管理（预测预警系统），降低抗性压力"
+    ],
+    "mechanism": "每个 R 基因的维持和表达都需要消耗植物的能量和代谢资源。过多抗病基因的堆叠产生累积性的生长代价（fitness cost）。",
+    "confidence": 0.65,
+    "tags": [],
+    "species": "水稻"
+  }
+]

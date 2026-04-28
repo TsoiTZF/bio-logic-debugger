@@ -39,6 +39,27 @@ python cli.py --validate rice_yield_per_plant >= 50
 - **🔬 性状浏览器** — 浏览知识库中的所有性状及其关联网络
 - **📚 反模式库** — 历史上反复验证的育种死胡同，附带失败案例和替代方向
 - **📜 约束规则** — 普适的生理学法则（FATAL 级违反 = 生理上不可能）
+- **📚 文献与知识库** — 上传论文 PDF / 搜索 DOI 提取知识，自动同步社区知识库
+
+## 新增功能
+
+### 📄 文献导入分析
+支持上传 PDF 论文或通过 DOI / 标题搜索，自动提取：
+- **性状**（Traits） — 数值范围、单位、分类
+- **关联**（Correlations） — 正/负相关、权衡关系
+- **约束**（Constraints） — 生理极限规则
+
+提取引擎采用 **规则匹配 + 可选 LLM** 双模式，结果合并去重。提取后用户可逐条审核勾选，确认后一键导入知识库。
+
+### 📊 图表分析（Vision）
+支持上传科学图表图片（相关性热图、箱线图等），通过 LLM Vision 解读图表中的生物学含义。
+
+### 🌐 社区知识库自动同步
+项目启动时自动从社区知识库仓库拉取最新数据。
+
+- **社区仓库**：[TsoiTZF/bio-logic-knowledge](https://github.com/TsoiTZF/bio-logic-knowledge)
+- 知识库分三层，优先级从高到低：**用户扩充 > 社区数据 > 内置兜底**
+- 用户可从 app 中导出扩充的 JSON 后提 PR 贡献到社区
 
 ## 项目结构
 
@@ -52,9 +73,14 @@ bio_logic_debugger/
 │   ├── engine.py             # 验证引擎
 │   └── anti_pattern.py       # 反模式匹配器
 ├── knowledge/
-│   └── rice_knowledge.py     # 水稻知识库（示例）
+│   ├── rice_knowledge.py     # 水稻知识库（内置兜底）
+│   ├── knowledge_store.py    # 知识库加载/合并/同步
+│   ├── paper_analyzer.py     # 论文分析编排器
+│   ├── pdf_parser.py         # PDF 文本提取
+│   ├── doi_fetcher.py        # DOI/标题检索
+│   └── data/                 # 社区知识库本地缓存
 └── llm/
-    └── reasoner.py           # LLM 深度分析（可选）
+    └── reasoner.py           # LLM 深度分析（可选，含 Vision）
 ```
 
 ## 内置知识库

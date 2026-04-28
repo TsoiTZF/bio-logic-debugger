@@ -1,0 +1,41 @@
+[
+  {
+    "id": "rice_not_both_tall_and_lodging_free",
+    "name": "株高与抗倒伏的不可兼得",
+    "description": "高度超过 120cm 的品种几乎不可能具有高抗倒伏性（>7级）。",
+    "severity": "FATAL",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_plant_height > 120 AND $rice_lodging_resistance >= 7",
+    "consequence": "超出茎秆力学的物理极限，倒伏风险极高。",
+    "confidence": 0.9,
+    "tags": []
+  },
+  {
+    "id": "rice_amylose_gel_mismatch",
+    "name": "直链淀粉与胶稠度的匹配约束",
+    "description": "高直链淀粉（>25%）品种胶稠度不可能达到软胶稠度（>80mm），反之亦然。",
+    "severity": "FATAL",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_amylose_content > 25 AND $rice_gel_consistency > 80",
+    "consequence": "违背稻米淀粉理化性质的基本规律。",
+    "confidence": 0.95,
+    "tags": []
+  },
+  {
+    "id": "rice_extreme_precocity",
+    "name": "极端早熟的生育期下限",
+    "description": "籼稻抽穗天数低于 65 天或粳稻低于 70 天时，基本营养生长期不足，无法形成足够的分蘖和叶片。",
+    "severity": "FATAL",
+    "scope": "SUBSPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_heading_days < 65",
+    "consequence": "基本营养体不足，产量没有保障。",
+    "confidence": 0.9,
+    "tags": [
+      "生育期",
+      "临界值"
+    ]
+  }
+]

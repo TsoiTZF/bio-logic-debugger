@@ -1,0 +1,132 @@
+[
+  {
+    "trait_a": "rice_panicle_number",
+    "trait_b": "rice_grain_per_panicle",
+    "corr_type": "NEGATIVE",
+    "strength": -0.45,
+    "confidence": 0.85,
+    "mechanism": "光合产物分配竞争：穗数增加导致每穗可分配的光合产物减少，单穗粒数随之下降。这是源-库关系的经典表现。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  },
+  {
+    "trait_a": "rice_grain_per_panicle",
+    "trait_b": "rice_1000_grain_weight",
+    "corr_type": "NEGATIVE",
+    "strength": -0.3,
+    "confidence": 0.7,
+    "mechanism": "籽粒数量增加后，单个籽粒的灌浆物质供应不足，导致粒重下降。尤其在灌浆期光温条件受限时更为明显。",
+    "conditions": [],
+    "antagonistic_threshold": 0.25
+  },
+  {
+    "trait_a": "rice_yield_per_plant",
+    "trait_b": "rice_grain_length",
+    "corr_type": "TRADE_OFF",
+    "strength": -0.35,
+    "confidence": 0.75,
+    "mechanism": "长粒型品种通常库容有限，单位面积粒数少于短粒品种，从而限制产量潜力。粒型改良往往以产量为代价。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  },
+  {
+    "trait_a": "rice_yield_per_plant",
+    "trait_b": "rice_amylose_content",
+    "corr_type": "TRADE_OFF",
+    "strength": -0.25,
+    "confidence": 0.6,
+    "mechanism": "高产栽培往往伴随高氮肥投入，影响直链淀粉合成。二者之间的平衡受栽培措施和品种遗传背景共同影响。",
+    "conditions": [],
+    "antagonistic_threshold": 0.25
+  },
+  {
+    "trait_a": "rice_grain_length",
+    "trait_b": "rice_1000_grain_weight",
+    "corr_type": "POSITIVE",
+    "strength": 0.55,
+    "confidence": 0.85,
+    "mechanism": "粒长和千粒重由共同的粒型基因（如 GS3, GW5）控制，粒长增加通常伴随着千粒重的提升。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  },
+  {
+    "trait_a": "rice_grain_width",
+    "trait_b": "rice_1000_grain_weight",
+    "corr_type": "POSITIVE",
+    "strength": 0.6,
+    "confidence": 0.85,
+    "mechanism": "粒宽是千粒重的关键决定因子之一。粒宽基因 GW2, GW5 的变异直接影响千粒重。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  },
+  {
+    "trait_a": "rice_amylose_content",
+    "trait_b": "rice_gel_consistency",
+    "corr_type": "NEGATIVE",
+    "strength": -0.65,
+    "confidence": 0.85,
+    "mechanism": "直链淀粉含量越高，胶稠度越短（米饭越硬）。这是稻米食味品质的核心化学基础。AC 过高（>25%）导致米饭硬、冷后回生；过低（<2%）则米饭过黏。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  },
+  {
+    "trait_a": "rice_protein_content",
+    "trait_b": "rice_amylose_content",
+    "corr_type": "CURVILINEAR",
+    "strength": 0.0,
+    "confidence": 0.5,
+    "mechanism": "蛋白质含量与直链淀粉含量的关系受施氮量调控：低氮条件下二者正相关，高氮条件下关系复杂化，且蛋白质含量升高会掩盖直链淀粉对食味的影响。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  },
+  {
+    "trait_a": "rice_plant_height",
+    "trait_b": "rice_lodging_resistance",
+    "corr_type": "NEGATIVE",
+    "strength": -0.55,
+    "confidence": 0.85,
+    "mechanism": "株高越高，重心升高，茎秆承受的弯矩增大，抗倒伏能力下降。半矮秆基因（sd1）的利用是绿色革命的核心。",
+    "conditions": [],
+    "antagonistic_threshold": 0.4
+  },
+  {
+    "trait_a": "rice_plant_height",
+    "trait_b": "rice_yield_per_plant",
+    "corr_type": "CURVILINEAR",
+    "strength": 0.0,
+    "confidence": 0.75,
+    "mechanism": "株高与产量的关系呈倒U型：过矮（<70cm）生物量不足限制产量，过高（>130cm）则因倒伏风险增加和收获指数下降而减产。最佳株高通常在 90-110cm 之间。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  },
+  {
+    "trait_a": "rice_blast_resistance",
+    "trait_b": "rice_yield_per_plant",
+    "corr_type": "TRADE_OFF",
+    "strength": -0.2,
+    "confidence": 0.4,
+    "mechanism": "部分广谱抗稻瘟病基因（如 Pi-ta, Pi-b）的导入可能带来微小的产量代价，但这一关联因遗传背景不同而差异很大。",
+    "conditions": [],
+    "antagonistic_threshold": 0.2
+  },
+  {
+    "trait_a": "rice_heading_days",
+    "trait_b": "rice_grain_filling_period",
+    "corr_type": "POSITIVE",
+    "strength": 0.4,
+    "confidence": 0.75,
+    "mechanism": "早熟品种通常灌浆期也较短，限制了光合产物积累时间，进而影响粒重和品质。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  },
+  {
+    "trait_a": "rice_heading_days",
+    "trait_b": "rice_yield_per_plant",
+    "corr_type": "POSITIVE",
+    "strength": 0.5,
+    "confidence": 0.8,
+    "mechanism": "生育期越长，光合产物积累期越长，产量潜力越大。但过长则受茬口和季节限制。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3
+  }
+]
