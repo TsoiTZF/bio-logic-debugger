@@ -1,0 +1,296 @@
+[
+  {
+    "id": "rice_not_both_tall_and_lodging_free",
+    "name": "株高与抗倒伏的不可兼得",
+    "description": "高度超过 120cm 的品种几乎不可能具有高抗倒伏性（>7级）。",
+    "severity": "FATAL",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_plant_height > 120 AND $rice_lodging_resistance >= 7",
+    "consequence": "超出茎秆力学的物理极限，倒伏风险极高。倒伏可导致产量损失 25-80%。",
+    "confidence": 0.9,
+    "tags": [],
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "作物倒伏力学研究",
+        "description": "茎秆受力分析",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "sd1 基因研究",
+        "description": "半矮秆基因提高抗倒伏性的机制",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "Khush, 1999, Green Revolution",
+        "description": "绿色革命的核心：矮秆抗倒伏",
+        "url": "",
+        "year": 1999
+      }
+    ]
+  },
+  {
+    "id": "rice_amylose_gel_mismatch",
+    "name": "直链淀粉与胶稠度的匹配约束",
+    "description": "高直链淀粉（>25%）品种胶稠度不可能达到软胶稠度（>80mm），反之亦然。",
+    "severity": "FATAL",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_amylose_content > 25 AND $rice_gel_consistency > 80",
+    "consequence": "违背稻米淀粉理化性质的基本规律。",
+    "confidence": 0.95,
+    "tags": [],
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "稻米品质化学原理",
+        "description": "稻米直链淀粉与胶稠度的理化关系",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "Juliano, 1971, Cereal Science Today",
+        "description": "稻米品质分析方法学",
+        "url": "",
+        "year": 1971
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "IRRI 品质评价标准",
+        "description": "直链淀粉与胶稠度的对应关系",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_extreme_precocity",
+    "name": "极端早熟的生育期下限",
+    "description": "籼稻抽穗天数低于 65 天或粳稻低于 70 天时，基本营养生长期不足，无法形成足够的分蘖和叶片。",
+    "severity": "FATAL",
+    "scope": "SUBSPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_heading_days < 65",
+    "consequence": "基本营养体不足，产量没有保障。分蘖数和叶面积指数无法达到有效水平。",
+    "confidence": 0.9,
+    "tags": [
+      "生育期",
+      "临界值"
+    ],
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "作物栽培学通论",
+        "description": "水稻基本营养生长期需求",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "光周期基因研究",
+        "description": "Hd1、Ghd7 等基因对生育期的调控",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_harvest_index_ceiling",
+    "name": "收获指数的生物学上限",
+    "description": "水稻收获指数不可能超过 0.65。超过此值意味着茎鞘和叶片生物量不足，无法支撑正常的光合作用和物质转运。",
+    "severity": "FATAL",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_harvest_index > 0.65",
+    "consequence": "茎鞘和叶片生物量不足，光合能力受限，产量形成缺乏物质基础。",
+    "confidence": 0.9,
+    "tags": [
+      "收获指数",
+      "理论上限"
+    ],
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "收获指数理论",
+        "description": "收获指数的生物学上限研究",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "绿色革命理论",
+        "description": "现代品种收获指数 0.50-0.55",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "作物生理学研究",
+        "description": "收获指数与生物量分配的关系",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_chalkiness_head_rice",
+    "name": "垩白度与整精米率的匹配约束",
+    "description": "垩白度超过 30% 的品种，整精米率几乎不可能达到 60% 以上。",
+    "severity": "SEVERE",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_chalkiness > 30 AND $rice_head_rice_recovery >= 60",
+    "consequence": "垩白区域结构疏松，碾磨时极易碎裂，整精米率无法保证。",
+    "confidence": 0.85,
+    "tags": [
+      "品质",
+      "碾磨"
+    ],
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "稻米碾磨品质研究",
+        "description": "垩白与整精米率的负相关关系",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "中国优质稻谷标准 GB/T 17891",
+        "description": "垩白度和整精米率的品质要求",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_grain_length_head_rice",
+    "name": "极端粒长与整精米率的约束",
+    "description": "粒长超过 8.5mm 的品种，整精米率很难达到 55% 以上。",
+    "severity": "WARNING",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_grain_length > 8.5 AND $rice_head_rice_recovery >= 55",
+    "consequence": "过长的籽粒在碾磨过程中容易断裂，整精米率下降。",
+    "confidence": 0.75,
+    "tags": [
+      "粒型",
+      "碾磨"
+    ],
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "稻米碾磨品质研究",
+        "description": "粒长与整精米率的负相关",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "SUGGESTED",
+        "source": "部分长粒品种数据",
+        "description": "粒长超过 8mm 后整精米率显著下降",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_drought_severe_yield_loss",
+    "name": "严重干旱的产量损失下限",
+    "description": "在严重干旱胁迫下（土壤水势 < -1.5 MPa），即使是最耐旱的品种，产量损失也不可能低于 30%。",
+    "severity": "FATAL",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_drought_tolerance >= 8 AND $drought_severity = 'severe'",
+    "consequence": "严重干旱导致光合作用停止、叶片卷曲、籽粒灌浆终止，产量损失不可避免。",
+    "confidence": 0.85,
+    "tags": [
+      "耐旱",
+      "产量损失"
+    ],
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "IRRI 耐旱研究",
+        "description": "严重干旱下的产量损失数据",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "作物抗旱生理学",
+        "description": "干旱胁迫对产量形成的影响机制",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_cold_tropical",
+    "name": "热带品种的耐冷限制",
+    "description": "纯热带血统的品种（无耐冷基因导入）在低于 15°C 的环境下几乎无法正常结实。",
+    "severity": "FATAL",
+    "scope": "SUBSPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_cold_tolerance <= 3 AND $temperature < 15",
+    "consequence": "低温导致花粉活力下降、授粉受精失败、籽粒灌浆停止。",
+    "confidence": 0.8,
+    "tags": [
+      "耐冷",
+      "生态型"
+    ],
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "水稻耐冷性研究",
+        "description": "热带品种的低温敏感性",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "水稻生态适应性研究",
+        "description": "不同生态型品种的温度适应范围",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_nitrogen_protein_quality",
+    "name": "高氮与蛋白质含量的关联",
+    "description": "施氮量超过 200 kg/ha 时，蛋白质含量通常超过 10%，可能影响食味品质。",
+    "severity": "WARNING",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$nitrogen_rate > 200 AND $rice_protein_content > 10",
+    "consequence": "蛋白质含量过高会掩盖直链淀粉对食味的影响，导致米饭口感变差。",
+    "confidence": 0.7,
+    "tags": [
+      "氮肥",
+      "品质"
+    ],
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "氮肥与稻米品质研究",
+        "description": "施氮量与蛋白质含量的正相关",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "SUGGESTED",
+        "source": "食味品质研究",
+        "description": "蛋白质含量对食味的影响",
+        "url": "",
+        "year": 0
+      }
+    ]
+  }
+]

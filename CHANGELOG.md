@@ -5,6 +5,12 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-09-12
+
+### Changed
+- 内置知识改为 `knowledge/builtin/*.json` 唯一数据源，`rice_knowledge.py` 只做加载
+- 序列化补齐 evidence / failed_approaches 字段，社区同步不再覆盖内置目录
+
 ## [0.2.1] - 2026-09-12
 
 ### Added

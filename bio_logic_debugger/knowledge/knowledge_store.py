@@ -30,12 +30,7 @@ from bio_logic_debugger.core.domain import (
     Trait,
     TraitCorrelation,
 )
-from bio_logic_debugger.knowledge.rice_knowledge import (
-    ANTI_PATTERNS as BUILTIN_ANTI_PATTERNS,
-    CONSTRAINTS as BUILTIN_CONSTRAINTS,
-    CORRELATIONS as BUILTIN_CORRELATIONS,
-    TRAITS as BUILTIN_TRAITS,
-)
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,8 +39,10 @@ COMMUNITY_BASE = (
     "https://raw.githubusercontent.com/TsoiTZF/bio-logic-knowledge/main"
 )
 
-# 本地 data 目录（相对于本文件）
+# 本地 data 目录：社区缓存（同步会覆盖）
 DATA_DIR = Path(__file__).parent / "data"
+# 内置知识：随包分发，同步不会覆盖
+BUILTIN_DIR = Path(__file__).parent / "builtin"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -82,6 +79,31 @@ def trait_from_dict(d: dict) -> Trait:
     )
 
 
+def evidence_to_dict(e: CorrelationEvidence) -> dict:
+    return {
+        "level": e.level.name,
+        "source": e.source,
+        "description": e.description,
+        "url": e.url,
+        "year": e.year,
+    }
+
+
+def evidence_from_dict(d: dict) -> CorrelationEvidence:
+    level_name = str(d.get("level", "SUGGESTED")).upper()
+    try:
+        level = EvidenceLevel[level_name]
+    except KeyError:
+        level = EvidenceLevel.SUGGESTED
+    return CorrelationEvidence(
+        level=level,
+        source=d.get("source", ""),
+        description=d.get("description", ""),
+        url=d.get("url", ""),
+        year=int(d.get("year") or 0),
+    )
+
+
 def correlation_to_dict(c: TraitCorrelation) -> dict:
     return {
         "trait_a": c.trait_a,
@@ -92,6 +114,7 @@ def correlation_to_dict(c: TraitCorrelation) -> dict:
         "mechanism": c.mechanism,
         "conditions": c.conditions,
         "antagonistic_threshold": c.antagonistic_threshold,
+        "evidence": [evidence_to_dict(e) for e in c.evidence],
     }
 
 
@@ -105,6 +128,7 @@ def correlation_from_dict(d: dict) -> TraitCorrelation:
         mechanism=d.get("mechanism", ""),
         conditions=d.get("conditions", []),
         antagonistic_threshold=d.get("antagonistic_threshold", 0.3),
+        evidence=[evidence_from_dict(e) for e in d.get("evidence", [])],
     )
 
 
@@ -120,6 +144,7 @@ def constraint_to_dict(c: BiologicalConstraint) -> dict:
         "consequence": c.consequence,
         "confidence": c.confidence,
         "tags": c.tags,
+        "evidence": [evidence_to_dict(e) for e in c.evidence],
     }
 
 
@@ -144,6 +169,7 @@ def constraint_from_dict(d: dict) -> BiologicalConstraint:
         consequence=d.get("consequence", ""),
         confidence=d.get("confidence", 1.0),
         tags=d.get("tags", []),
+        evidence=[evidence_from_dict(e) for e in d.get("evidence", [])],
     )
 
 
@@ -156,7 +182,12 @@ def anti_pattern_to_dict(ap: AntiPattern) -> dict:
         "severity": ap.severity.name,
         "historical_examples": ap.historical_examples,
         "failed_approaches": [
-            {"description": fa.description, "reason_failed": fa.reason_failed}
+            {
+                "description": fa.description,
+                "reason_failed": fa.reason_failed,
+                "year_range": list(fa.year_range),
+                "reference": fa.reference,
+            }
             for fa in ap.failed_approaches
         ],
         "alternative_directions": ap.alternative_directions,
@@ -164,6 +195,7 @@ def anti_pattern_to_dict(ap: AntiPattern) -> dict:
         "confidence": ap.confidence,
         "tags": ap.tags,
         "species": ap.species,
+        "evidence": [evidence_to_dict(e) for e in ap.evidence],
     }
 
 
@@ -176,7 +208,12 @@ def anti_pattern_from_dict(d: dict) -> AntiPattern:
         severity=ConstraintSeverity[d.get("severity", "WARNING")],
         historical_examples=d.get("historical_examples", []),
         failed_approaches=[
-            FailedApproach(fa["description"], fa["reason_failed"])
+            FailedApproach(
+                description=fa.get("description", ""),
+                reason_failed=fa.get("reason_failed", ""),
+                year_range=tuple(fa.get("year_range") or (0, 0)),
+                reference=fa.get("reference", ""),
+            )
             for fa in d.get("failed_approaches", [])
         ],
         alternative_directions=d.get("alternative_directions", []),
@@ -184,6 +221,7 @@ def anti_pattern_from_dict(d: dict) -> AntiPattern:
         confidence=d.get("confidence", 1.0),
         tags=d.get("tags", []),
         species=d.get("species", "通用"),
+        evidence=[evidence_from_dict(e) for e in d.get("evidence", [])],
     )
 
 
@@ -243,6 +281,14 @@ def has_community_data() -> bool:
 
 def load_community() -> dict:
     """从本地 data/ 目录加载社区知识库数据（JSON 格式的原始 dict）"""
+    try:
+        return _load_json_bundle(DATA_DIR)
+    except Exception as e:
+        logger.warning(f"加载社区知识库失败: {e}")
+        return {"traits": [], "correlations": [], "constraints": [], "anti_patterns": []}
+
+
+def _load_json_bundle(directory: Path) -> dict:
     result = {"traits": [], "correlations": [], "constraints": [], "anti_patterns": []}
     for key, fname in [
         ("traits", "traits.json"),
@@ -250,24 +296,24 @@ def load_community() -> dict:
         ("constraints", "constraints.json"),
         ("anti_patterns", "anti_patterns.json"),
     ]:
-        path = DATA_DIR / fname
-        if path.exists():
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    result[key] = json.load(f)
-            except Exception as e:
-                logger.warning(f"加载 {fname} 失败: {e}")
+        path = directory / fname
+        if not path.exists():
+            continue
+        with open(path, "r", encoding="utf-8") as f:
+            result[key] = json.load(f)
     return result
 
 
 def load_builtin() -> dict:
-    """加载内置知识库（rice_knowledge.py），返回序列化后的 dict 列表"""
-    return {
-        "traits": [trait_to_dict(t) for t in BUILTIN_TRAITS],
-        "correlations": [correlation_to_dict(c) for c in BUILTIN_CORRELATIONS],
-        "constraints": [constraint_to_dict(c) for c in BUILTIN_CONSTRAINTS],
-        "anti_patterns": [anti_pattern_to_dict(ap) for ap in BUILTIN_ANTI_PATTERNS],
-    }
+    """加载随包分发的内置知识（knowledge/builtin/*.json）。"""
+    data = _load_json_bundle(BUILTIN_DIR)
+    if not data["traits"]:
+        raise FileNotFoundError(f"内置知识库缺失: {BUILTIN_DIR}")
+    return data
+
+
+def load_builtin_objects() -> tuple:
+    return deserialize_all(load_builtin())
 
 
 def merge_knowledge(

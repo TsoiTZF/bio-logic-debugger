@@ -1,0 +1,705 @@
+[
+  {
+    "trait_a": "rice_panicle_number",
+    "trait_b": "rice_grain_per_panicle",
+    "corr_type": "NEGATIVE",
+    "strength": -0.45,
+    "confidence": 0.85,
+    "mechanism": "光合产物分配竞争：穗数增加导致每穗可分配的光合产物减少，单穗粒数随之下降。这是源-库关系的经典表现。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "Yoshida, 1981, Fundamentals of Rice Crop Science",
+        "description": "经典教材中的源-库理论",
+        "url": "",
+        "year": 1981
+      },
+      {
+        "level": "STRONG",
+        "source": "Fageria et al., 2006, Journal of Plant Nutrition",
+        "description": "产量构成因素的通径分析，穗数与每穗粒数负相关 r=-0.42",
+        "url": "",
+        "year": 2006
+      },
+      {
+        "level": "STRONG",
+        "source": "中国水稻研究所多年田间数据",
+        "description": "长江中下游稻区多年数据统计",
+        "url": "",
+        "year": 2019
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_grain_per_panicle",
+    "trait_b": "rice_1000_grain_weight",
+    "corr_type": "NEGATIVE",
+    "strength": -0.3,
+    "confidence": 0.7,
+    "mechanism": "籽粒数量增加后，单个籽粒的灌浆物质供应不足，导致粒重下降。尤其在灌浆期光温条件受限时更为明显。",
+    "conditions": [],
+    "antagonistic_threshold": 0.25,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "Peng et al., 2008, Rice yield potential",
+        "description": "IRRI 长期育种数据分析",
+        "url": "",
+        "year": 2008
+      },
+      {
+        "level": "STRONG",
+        "source": "Kumar et al., 2014, Indian Journal of Genetics",
+        "description": "产量构成因素相关分析，r=-0.28",
+        "url": "",
+        "year": 2014
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_panicle_number",
+    "trait_b": "rice_1000_grain_weight",
+    "corr_type": "NEGATIVE",
+    "strength": -0.25,
+    "confidence": 0.65,
+    "mechanism": "穗数过多导致群体郁闭，影响灌浆期光合产物积累，从而降低千粒重。",
+    "conditions": [],
+    "antagonistic_threshold": 0.2,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "Fageria et al., 2006",
+        "description": "穗数与千粒重负相关 r=-0.22",
+        "url": "",
+        "year": 2006
+      },
+      {
+        "level": "SUGGESTED",
+        "source": "中国水稻育种实践",
+        "description": "多穗型品种往往千粒重偏低",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_yield_per_plant",
+    "trait_b": "rice_grain_length",
+    "corr_type": "TRADE_OFF",
+    "strength": -0.35,
+    "confidence": 0.75,
+    "mechanism": "长粒型品种通常库容有限，单位面积粒数少于短粒品种，从而限制产量潜力。粒型改良往往以产量为代价。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "中国优质稻育种实践",
+        "description": "多年优质稻育种总结",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "Fan et al., 2006, GS3 gene cloning",
+        "description": "GS3 基因对粒长和粒重的多效性",
+        "url": "",
+        "year": 2006
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_yield_per_plant",
+    "trait_b": "rice_amylose_content",
+    "corr_type": "TRADE_OFF",
+    "strength": -0.25,
+    "confidence": 0.6,
+    "mechanism": "高产栽培往往伴随高氮肥投入，影响直链淀粉合成。二者之间的平衡受栽培措施和品种遗传背景共同影响。",
+    "conditions": [],
+    "antagonistic_threshold": 0.25,
+    "evidence": [
+      {
+        "level": "SUGGESTED",
+        "source": "部分育种报告",
+        "description": "非严格一致的关联，因品种而异",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "SUGGESTED",
+        "source": "Li et al., 2023, Theoretical and Applied Genetics",
+        "description": "产量与品质权衡的综述",
+        "url": "",
+        "year": 2023
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_yield_per_ha",
+    "trait_b": "rice_chalkiness",
+    "corr_type": "POSITIVE",
+    "strength": 0.3,
+    "confidence": 0.7,
+    "mechanism": "高产品种往往灌浆不充分，导致垩白度增加。垩白度是外观品质的重要指标。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "中国水稻研究所品质分析",
+        "description": "高产品种垩白度普遍偏高",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "Chalk5 基因研究",
+        "description": "垩白形成与灌浆物质分配相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_1000_grain_weight",
+    "trait_b": "rice_chalkiness",
+    "corr_type": "POSITIVE",
+    "strength": 0.4,
+    "confidence": 0.75,
+    "mechanism": "千粒重增加往往伴随籽粒增大，灌浆物质向籽粒中心扩散不充分，导致腹白和心白增加。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "水稻品质遗传研究",
+        "description": "粒型与垩白的正相关关系",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_grain_length",
+    "trait_b": "rice_1000_grain_weight",
+    "corr_type": "POSITIVE",
+    "strength": 0.55,
+    "confidence": 0.85,
+    "mechanism": "粒长和千粒重由共同的粒型基因（如 GS3, GW5）控制，粒长增加通常伴随着千粒重的提升。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "Fan et al., 2006, GS3 gene cloning",
+        "description": "GS3 基因对粒长和粒重的多效性",
+        "url": "",
+        "year": 2006
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_grain_width",
+    "trait_b": "rice_1000_grain_weight",
+    "corr_type": "POSITIVE",
+    "strength": 0.6,
+    "confidence": 0.85,
+    "mechanism": "粒宽是千粒重的关键决定因子之一。粒宽基因 GW2, GW5 的变异直接影响千粒重。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "Song et al., 2007, GW2 gene",
+        "description": "GW2 基因对粒宽和粒重的正效应",
+        "url": "",
+        "year": 2007
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_amylose_content",
+    "trait_b": "rice_gel_consistency",
+    "corr_type": "NEGATIVE",
+    "strength": -0.65,
+    "confidence": 0.85,
+    "mechanism": "直链淀粉含量越高，胶稠度越短（米饭越硬）。这是稻米食味品质的核心化学基础。AC 过高（>25%）导致米饭硬、冷后回生；过低（<2%）则米饭过黏。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "IRRI 稻米品质评价标准",
+        "description": "国际水稻研究所标准",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "Juliano, 1971, Cereal Science Today",
+        "description": "稻米品质分析方法学",
+        "url": "",
+        "year": 1971
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "中国水稻研究所品质分析",
+        "description": "多年品质数据累积",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_amylose_content",
+    "trait_b": "rice_alkali_spreading_value",
+    "corr_type": "NEGATIVE",
+    "strength": -0.4,
+    "confidence": 0.7,
+    "mechanism": "直链淀粉含量高的品种通常糊化温度也高（碱消值低），蒸煮时间长。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "IRRI 品质评价体系",
+        "description": "直链淀粉与糊化温度的负相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_protein_content",
+    "trait_b": "rice_amylose_content",
+    "corr_type": "CURVILINEAR",
+    "strength": 0.0,
+    "confidence": 0.5,
+    "mechanism": "蛋白质含量与直链淀粉含量的关系受施氮量调控：低氮条件下二者正相关，高氮条件下关系复杂化，且蛋白质含量升高会掩盖直链淀粉对食味的影响。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "SUGGESTED",
+        "source": "综合文献调研",
+        "description": "关系不恒定，受环境条件影响大",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_chalkiness",
+    "trait_b": "rice_head_rice_recovery",
+    "corr_type": "NEGATIVE",
+    "strength": -0.55,
+    "confidence": 0.8,
+    "mechanism": "垩白度高的籽粒内部结构疏松，碾磨时容易碎裂，导致整精米率下降。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "稻米碾磨品质研究",
+        "description": "垩白与整精米率的负相关关系",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "中国优质稻谷标准 GB/T 17891",
+        "description": "垩白度和整精米率均为重要品质指标",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_grain_length",
+    "trait_b": "rice_head_rice_recovery",
+    "corr_type": "NEGATIVE",
+    "strength": -0.35,
+    "confidence": 0.65,
+    "mechanism": "过长的籽粒在碾磨过程中更容易断裂，尤其是当粒长超过 8mm 时，整精米率显著下降。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "稻米碾磨品质研究",
+        "description": "粒长与整精米率的负相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_plant_height",
+    "trait_b": "rice_lodging_resistance",
+    "corr_type": "NEGATIVE",
+    "strength": -0.55,
+    "confidence": 0.85,
+    "mechanism": "株高越高，重心升高，茎秆承受的弯矩增大，抗倒伏能力下降。半矮秆基因（sd1）的利用是绿色革命的核心。",
+    "conditions": [],
+    "antagonistic_threshold": 0.4,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "绿色革命经典理论",
+        "description": "sd1 半矮秆基因的广泛应用",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "Khush, 1999, Green Revolution",
+        "description": "水稻绿色革命的回顾",
+        "url": "",
+        "year": 1999
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "sd1 基因功能研究",
+        "description": "sd1 降低株高 20-30%，显著提高抗倒伏性",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_plant_height",
+    "trait_b": "rice_yield_per_plant",
+    "corr_type": "CURVILINEAR",
+    "strength": 0.0,
+    "confidence": 0.75,
+    "mechanism": "株高与产量的关系呈倒U型：过矮（<70cm）生物量不足限制产量，过高（>130cm）则因倒伏风险增加和收获指数下降而减产。最佳株高通常在 90-110cm 之间。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "IRRI 株型育种理论",
+        "description": "动态株型概念",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "收获指数研究",
+        "description": "现代半矮秆品种收获指数 0.50-0.55，传统高秆品种 0.30-0.40",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_plant_height",
+    "trait_b": "rice_harvest_index",
+    "corr_type": "NEGATIVE",
+    "strength": -0.6,
+    "confidence": 0.85,
+    "mechanism": "株高越矮，分配到茎秆的生物量越少，收获指数越高。这是绿色革命提高产量的核心机制之一。",
+    "conditions": [],
+    "antagonistic_threshold": 0.4,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "绿色革命理论",
+        "description": "矮秆品种收获指数显著提高",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "收获指数理论",
+        "description": "收获指数的生物学上限约 0.60",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_tiller_number",
+    "trait_b": "rice_panicle_number",
+    "corr_type": "POSITIVE",
+    "strength": 0.75,
+    "confidence": 0.9,
+    "mechanism": "有效分蘖数直接决定穗数。分蘖是水稻产量形成的基础。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "作物栽培学通论",
+        "description": "分蘖与穗数的正相关关系",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_culm_strength",
+    "trait_b": "rice_lodging_resistance",
+    "corr_type": "POSITIVE",
+    "strength": 0.65,
+    "confidence": 0.8,
+    "mechanism": "茎秆强度是抗倒伏性的物质基础。茎秆机械组织发达、细胞壁厚的品种抗倒伏能力强。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "水稻茎秆力学研究",
+        "description": "茎秆强度与抗倒伏性的正相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_blast_resistance",
+    "trait_b": "rice_yield_per_plant",
+    "corr_type": "TRADE_OFF",
+    "strength": -0.2,
+    "confidence": 0.4,
+    "mechanism": "部分广谱抗稻瘟病基因（如 Pi-ta, Pi-b）的导入可能带来微小的产量代价，但这一关联因遗传背景不同而差异很大。",
+    "conditions": [],
+    "antagonistic_threshold": 0.2,
+    "evidence": [
+      {
+        "level": "SUGGESTED",
+        "source": "部分育种实践报告",
+        "description": "产量代价因基因和背景而异",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "SUGGESTED",
+        "source": "Khanna et al., 2015",
+        "description": "抗病基因堆叠的产量代价研究",
+        "url": "",
+        "year": 2015
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_blast_resistance",
+    "trait_b": "rice_bacterial_blight_res",
+    "corr_type": "POSITIVE",
+    "strength": 0.3,
+    "confidence": 0.55,
+    "mechanism": "部分抗病基因可能存在连锁或一因多效，导致对不同病害的抗性同时出现。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "SUGGESTED",
+        "source": "抗病基因定位研究",
+        "description": "部分抗病基因簇的存在",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_heading_days",
+    "trait_b": "rice_grain_filling_period",
+    "corr_type": "POSITIVE",
+    "strength": 0.4,
+    "confidence": 0.75,
+    "mechanism": "早熟品种通常灌浆期也较短，限制了光合产物积累时间，进而影响粒重和品质。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "中国水稻所生育期研究",
+        "description": "早、中、晚稻品种数据分析",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "光周期基因研究",
+        "description": "Hd1、Ghd7 等基因同时影响抽穗期和灌浆期",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_heading_days",
+    "trait_b": "rice_yield_per_plant",
+    "corr_type": "POSITIVE",
+    "strength": 0.5,
+    "confidence": 0.8,
+    "mechanism": "生育期越长，光合产物积累期越长，产量潜力越大。但过长则受茬口和季节限制。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "作物生理学通论",
+        "description": "生育期与产量潜力的基本关系",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "Ghd7 基因研究",
+        "description": "Ghd7 功能性等位基因延迟抽穗 10-20 天，增加产量潜力",
+        "url": "",
+        "year": 2008
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_growth_duration",
+    "trait_b": "rice_biomass",
+    "corr_type": "POSITIVE",
+    "strength": 0.55,
+    "confidence": 0.8,
+    "mechanism": "全生育期越长，光合作用时间越长，生物产量越高。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "作物生理学研究",
+        "description": "生育期与生物产量的正相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_drought_tolerance",
+    "trait_b": "rice_yield_per_plant",
+    "corr_type": "TRADE_OFF",
+    "strength": -0.25,
+    "confidence": 0.55,
+    "mechanism": "耐旱性选育往往伴随产量潜力的损失。在水分充足条件下，耐旱品种产量通常低于高产品种。",
+    "conditions": [],
+    "antagonistic_threshold": 0.2,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "IRRI 耐旱育种研究",
+        "description": "耐旱性与产量的权衡关系",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "qDTY 位点研究",
+        "description": "耐旱 QTL 的产量代价",
+        "url": "",
+        "year": 2010
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_root_depth",
+    "trait_b": "rice_drought_tolerance",
+    "corr_type": "POSITIVE",
+    "strength": 0.6,
+    "confidence": 0.75,
+    "mechanism": "深根系能够利用深层土壤水分，提高干旱胁迫下的水分获取能力。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "DRO1 基因研究",
+        "description": "深根基因 DRO1 提高耐旱性",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "IRRI 根系研究",
+        "description": "根系深度与耐旱性的正相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_spad_value",
+    "trait_b": "rice_photosynthetic_rate",
+    "corr_type": "POSITIVE",
+    "strength": 0.45,
+    "confidence": 0.65,
+    "mechanism": "SPAD 值反映叶绿素含量，叶绿素含量高的叶片光合速率通常较高。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "光合作用研究",
+        "description": "叶绿素含量与光合速率的正相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_leaf_angle",
+    "trait_b": "rice_photosynthetic_rate",
+    "corr_type": "CURVILINEAR",
+    "strength": 0.0,
+    "confidence": 0.6,
+    "mechanism": "叶角影响冠层光分布。直立叶（小叶角）有利于光在冠层内均匀分布，提高群体光合效率。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "理想株型理论",
+        "description": "直立叶型提高光能利用效率",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_nitrogen_use_efficiency",
+    "trait_b": "rice_yield_per_plant",
+    "corr_type": "POSITIVE",
+    "strength": 0.4,
+    "confidence": 0.6,
+    "mechanism": "氮肥利用率高的品种在相同氮肥投入下能获得更高产量。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "氮肥利用效率研究",
+        "description": "氮效率与产量的正相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "trait_a": "rice_nitrogen_use_efficiency",
+    "trait_b": "rice_protein_content",
+    "corr_type": "NEGATIVE",
+    "strength": -0.3,
+    "confidence": 0.5,
+    "mechanism": "氮肥利用率高的品种往往将更多氮素用于产量形成而非蛋白质积累。",
+    "conditions": [],
+    "antagonistic_threshold": 0.3,
+    "evidence": [
+      {
+        "level": "SUGGESTED",
+        "source": "氮代谢研究",
+        "description": "氮分配与品质的关系",
+        "url": "",
+        "year": 0
+      }
+    ]
+  }
+]

@@ -92,6 +92,9 @@ bio_logic_debugger/
 
 ## 内置知识库
 
+内置知识在 `bio_logic_debugger/knowledge/builtin/*.json`（随包分发）。
+`data/` 只存放社区同步缓存，不会覆盖内置文件。
+
 目前以 **水稻 (Oryza sativa)** 作为示例知识库，覆盖：
 
 - **40 个性状**：产量、品质、株型、抗病、抗逆、生育期、生理等维度

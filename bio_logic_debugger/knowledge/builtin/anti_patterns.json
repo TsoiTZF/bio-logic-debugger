@@ -1,0 +1,460 @@
+[
+  {
+    "id": "rice_high_yield_low_quality",
+    "name": "高产低质的陷阱",
+    "description": "追求单一产量指标突破的情况下，品质性状（粒型、食味）往往会系统性下降。过去三十年中国优质稻育种的经验表明，在不引入特殊种质资源的条件下，亩产超过 800kg 的品种鲜有达到国标一级优质米的案例。",
+    "trigger_traits": [
+      "rice_yield_per_ha",
+      "rice_grain_length",
+      "rice_amylose_content"
+    ],
+    "severity": "SEVERE",
+    "historical_examples": [
+      "1990s 湖南高产稻推广：产量突出但米质差，市场接受度低",
+      "2000s 部分超级稻品种：产量达标但食味评分偏低，难以形成品牌",
+      "部分杂交稻组合：产量优势明显但垩白度高、整精米率低"
+    ],
+    "failed_approaches": [
+      {
+        "description": "单纯增加穗数追求高产",
+        "reason_failed": "穗数过多导致籽粒充实度下降，整精米率降低",
+        "year_range": [
+          1990,
+          2005
+        ],
+        "reference": "中国超级稻育种二十年回顾"
+      },
+      {
+        "description": "在籼稻背景下导入高产基因不兼顾品质",
+        "reason_failed": "虽然产量提升 10-15%，但垩白度显著增加，外观品质下降",
+        "year_range": [
+          2000,
+          2015
+        ],
+        "reference": ""
+      },
+      {
+        "description": "过度追求大粒型",
+        "reason_failed": "千粒重增加导致垩白度升高，整精米率下降",
+        "year_range": [
+          2005,
+          2020
+        ],
+        "reference": "粒型与品质的权衡关系研究"
+      }
+    ],
+    "alternative_directions": [
+      "寻找同时控制产量和品质的主效QTL区间，如 GW7/qGL7 同时增加粒长且不影响产量",
+      "采用分子标记辅助选择，打破产量-品质的连锁累赘",
+      "考虑分步实现：先构建优质基础材料，再叠加产量基因",
+      "利用基因编辑技术（CRISPR）精准调控品质基因，减少产量代价",
+      "选择垩白度低、整精米率高的亲本作为品质改良基础"
+    ],
+    "mechanism": "产量和品质之间存在共同的碳水化合物分配限制。高产需要更多的籽粒库容，而优质需要充足的灌浆物质积累。二者在光合产物分配上构成竞争关系。此外，高产栽培的高氮投入也会影响淀粉合成和品质形成。",
+    "confidence": 0.85,
+    "tags": [],
+    "species": "水稻",
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "中国超级稻育种项目评估报告",
+        "description": "多年超级稻育种项目评估数据",
+        "url": "",
+        "year": 2020
+      },
+      {
+        "level": "CONFIRMED",
+        "source": "稻米品质与产量关系的生理学基础",
+        "description": "稻米品质与产量关系的生理学基础研究数据",
+        "url": "",
+        "year": 2018
+      },
+      {
+        "level": "STRONG",
+        "source": "Li et al., 2023, Theoretical and Applied Genetics",
+        "description": "产量与品质权衡的综述",
+        "url": "",
+        "year": 2023
+      },
+      {
+        "level": "STRONG",
+        "source": "Zhou et al., 2023, Nature Communications",
+        "description": "产量与品质协同改良研究",
+        "url": "",
+        "year": 2023
+      }
+    ]
+  },
+  {
+    "id": "rice_extreme_grain_type",
+    "name": "极端粒型的代价",
+    "description": "过度追求特长粒（>8mm）或特宽粒（>3.5mm）往往导致整精米率急剧下降、垩白度升高、以及灌浆不充实。市场对极端粒型的接受度也有限。",
+    "trigger_traits": [
+      "rice_grain_length",
+      "rice_grain_width",
+      "rice_1000_grain_weight",
+      "rice_chalkiness"
+    ],
+    "severity": "WARNING",
+    "historical_examples": [
+      "部分长粒籼稻品种：粒长超过 8mm 但整精米率低于 45%",
+      "某些泰国香稻衍生系：过度追求细长粒型导致产量潜力受限",
+      "部分大粒型品种：千粒重超过 35g 但垩白度超过 15%"
+    ],
+    "failed_approaches": [
+      {
+        "description": "粒长超过 8.5mm 的选育",
+        "reason_failed": "籽粒灌浆不充实，整精米率低于 40%，且垩白度超过 10%",
+        "year_range": [
+          0,
+          0
+        ],
+        "reference": ""
+      },
+      {
+        "description": "粒宽超过 3.5mm 的选育",
+        "reason_failed": "虽然千粒重高，但垩白度显著增加，外观品质差",
+        "year_range": [
+          0,
+          0
+        ],
+        "reference": ""
+      }
+    ],
+    "alternative_directions": [
+      "将粒长控制在 7.0-7.5mm，兼顾碾磨品质和外观",
+      "粒长和粒宽的协调改良，追求长宽比>3.0 而非绝对长度",
+      "优先选择垩白度低、整精米率高的粒型组合",
+      "利用 GS3、GW5 等主效基因的优良等位基因进行精准改良"
+    ],
+    "mechanism": "籽粒长度超过遗传限制后，胚乳发育过程中背部与腹部的细胞分裂不同步，导致垩白产生。粒宽过大则导致灌浆物质向籽粒中心扩散不充分。",
+    "confidence": 0.75,
+    "tags": [],
+    "species": "水稻",
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "Fan et al., 2006, GS3 gene",
+        "description": "GS3 基因对粒长的调控",
+        "url": "",
+        "year": 2006
+      },
+      {
+        "level": "STRONG",
+        "source": "Song et al., 2007, GW2 gene",
+        "description": "GW2 基因对粒宽的调控",
+        "url": "",
+        "year": 2007
+      },
+      {
+        "level": "STRONG",
+        "source": "稻米碾磨品质研究",
+        "description": "粒型与整精米率的负相关",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_semi_dwarf_extreme",
+    "name": "过度矮化的产量陷阱",
+    "description": "sd1 半矮秆基因是绿色革命的基础，但并非越矮越好。株高低于 70cm 时，生物量不足导致产量潜力严重受限，且叶片过密影响冠层光合效率。",
+    "trigger_traits": [
+      "rice_plant_height",
+      "rice_yield_per_plant",
+      "rice_lodging_resistance",
+      "rice_harvest_index"
+    ],
+    "severity": "WARNING",
+    "historical_examples": [
+      "部分育种项目盲目矮化：株高 60-65cm 品系，产量不到正常品种 70%",
+      "过度矮化导致生物量不足，收获指数虽高但绝对产量低"
+    ],
+    "failed_approaches": [
+      {
+        "description": "株高低于 65cm 的选育",
+        "reason_failed": "生物量严重不足，产量潜力受限",
+        "year_range": [
+          1980,
+          2000
+        ],
+        "reference": "过度矮化的产量代价研究"
+      }
+    ],
+    "alternative_directions": [
+      "理想株高控制在 90-110cm，配合强秆基因提高抗倒伏性",
+      "探索理想株型（ideotype）概念：不是简单矮化，而是优化株型结构",
+      "利用新的矮秆基因（如 d50）替代 sd1，拓宽遗传基础",
+      "结合茎秆强度（culm strength）选择，而非单纯降低株高"
+    ],
+    "mechanism": "株高极端降低虽然增强了抗倒伏性，但同时也减少了光合作用器官的总量，限制了生物产量，进而制约经济产量。收获指数的生物学上限约 0.60，无法无限提高。",
+    "confidence": 0.8,
+    "tags": [],
+    "species": "水稻",
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "绿色革命理论",
+        "description": "sd1 基因的应用与限制",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "收获指数理论",
+        "description": "收获指数的生物学上限",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "d50 基因研究",
+        "description": "新矮秆基因的探索",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_precocious_sacrifice",
+    "name": "早熟必低产的经验律",
+    "description": "生育期每缩短 10 天，产量潜力平均下降约 8-12%。这是光合产物积累时间缩短的必然结果。要求在极早熟背景下实现超高产，是已知的育种死胡同。",
+    "trigger_traits": [
+      "rice_heading_days",
+      "rice_yield_per_plant",
+      "rice_biomass"
+    ],
+    "severity": "SEVERE",
+    "historical_examples": [
+      "东北早熟稻区：生育期 120 天以下品种，产量长期低于中晚熟品种 30%",
+      "华南双季稻早稻：生育期紧逼百天，产量潜力天花板明显",
+      "部分极早熟品种：生育期 100 天以下，产量仅为正常品种的 60-70%"
+    ],
+    "failed_approaches": [],
+    "alternative_directions": [
+      "优化灌浆期光合效率而非延长生育期",
+      "利用强光效基因（如 C4 途径相关基因）弥补生育期短的不足",
+      "考虑温光资源匹配：确保灌浆期处于最佳光温条件下",
+      "利用光周期敏感基因（如 Ghd7）优化抽穗期，而非简单缩短生育期",
+      "选择灌浆速率高的品种，缩短灌浆期但不降低粒重"
+    ],
+    "mechanism": "生育期=光合产物积累时间。在相同的生长速率下，积累时间越长总产量越高。这是作物生理学的基本原理。Ghd7 等基因通过调控抽穗期影响产量潜力。",
+    "confidence": 0.9,
+    "tags": [],
+    "species": "水稻",
+    "evidence": [
+      {
+        "level": "CONFIRMED",
+        "source": "作物生理学通论",
+        "description": "生育期与产量的基本关系",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "Xue et al., 2008, Nature Genetics",
+        "description": "Ghd7 基因对生育期和产量的调控",
+        "url": "",
+        "year": 2008
+      },
+      {
+        "level": "STRONG",
+        "source": "中国水稻生育期研究",
+        "description": "早中晚稻品种产量差异分析",
+        "url": "",
+        "year": 0
+      }
+    ]
+  },
+  {
+    "id": "rice_total_disease_resistance",
+    "name": "全面抗病的性价比陷阱",
+    "description": "试图同时针对所有主要病害（稻瘟病、白叶枯病、纹枯病、稻曲病等）达到高抗水平，往往导致抗性基因堆叠过多，引起生长势下降和产量损失。这就是所谓的「抗性代价」（resistance cost）。",
+    "trigger_traits": [
+      "rice_blast_resistance",
+      "rice_bacterial_blight_res",
+      "rice_yield_per_plant"
+    ],
+    "severity": "WARNING",
+    "historical_examples": [
+      "IRRI 部分多抗品系：携带 5+ 抗病基因但田间产量缺陷明显",
+      "部分基因聚合品系：抗性谱广但生长势弱，产量低于亲本"
+    ],
+    "failed_approaches": [
+      {
+        "description": "堆叠 5 个以上主效抗病基因",
+        "reason_failed": "累积性的生长代价导致产量下降 10-15%",
+        "year_range": [
+          2000,
+          2020
+        ],
+        "reference": "Khanna et al., 2015, 抗病基因堆叠研究"
+      }
+    ],
+    "alternative_directions": [
+      "确定目标区域的主控病害，优先保证对主要病害的抗性",
+      "利用广谱抗病基因（如 Pik, Xa21）而非堆叠多个小种特异性基因",
+      "结合抗病基因和田间管理（预测预警系统），降低抗性压力",
+      "利用定量抗性（如 pi21）替代主效 R 基因，降低抗性代价",
+      "采用基因编辑技术精准改良抗性，减少连锁累赘"
+    ],
+    "mechanism": "每个 R 基因的维持和表达都需要消耗植物的能量和代谢资源。过多抗病基因的堆叠产生累积性的生长代价（fitness cost）。此外，抗性基因导入可能带来连锁累赘。",
+    "confidence": 0.65,
+    "tags": [],
+    "species": "水稻",
+    "evidence": [
+      {
+        "level": "SUGGESTED",
+        "source": "IRRI 部分多抗品系田间数据",
+        "description": "多抗品系产量缺陷观察",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "Khanna et al., 2015",
+        "description": "抗病基因堆叠的产量代价",
+        "url": "",
+        "year": 2015
+      },
+      {
+        "level": "STRONG",
+        "source": "Fukuoka et al., 2009",
+        "description": "pi21 定量抗性研究",
+        "url": "",
+        "year": 2009
+      }
+    ]
+  },
+  {
+    "id": "rice_drought_yield_tradeoff",
+    "name": "耐旱与高产的两难",
+    "description": "耐旱性选育往往伴随产量潜力的损失。在水分充足条件下，耐旱品种产量通常低于高产品种 10-20%。这是由于耐旱机制（如气孔关闭、根系分配增加）与高产机制（如光合效率、籽粒灌浆）存在内在冲突。",
+    "trigger_traits": [
+      "rice_drought_tolerance",
+      "rice_yield_per_plant",
+      "rice_root_depth"
+    ],
+    "severity": "WARNING",
+    "historical_examples": [
+      "IRRI 耐旱品系：耐旱性好但产量潜力低于高产品种",
+      "部分 qDTY 导入系：耐旱性提高但产量代价明显",
+      "非洲雨养稻区：耐旱品种产量普遍低于灌溉区品种"
+    ],
+    "failed_approaches": [
+      {
+        "description": "单纯选择深根系提高耐旱性",
+        "reason_failed": "根系分配增加导致地上部生物量和产量下降",
+        "year_range": [
+          2000,
+          2015
+        ],
+        "reference": "DRO1 基因研究"
+      },
+      {
+        "description": "导入多个耐旱 QTL",
+        "reason_failed": "累积性的产量代价导致在灌溉条件下产量显著下降",
+        "year_range": [
+          2005,
+          2020
+        ],
+        "reference": "qDTY 位点研究"
+      }
+    ],
+    "alternative_directions": [
+      "根据目标环境的水分条件选择合适的耐旱水平",
+      "利用气孔调控基因（如 OsERA1）优化气孔响应，减少产量代价",
+      "结合耐旱品种与节水灌溉技术（如 AWD），实现水肥高效",
+      "选择灌浆期耐旱的品种，而非全生育期耐旱",
+      "利用基因编辑技术精准调控耐旱相关基因"
+    ],
+    "mechanism": "耐旱机制与高产机制存在内在冲突。气孔关闭减少水分蒸腾但也降低光合速率；根系分配增加提高水分获取但减少地上部生物量。这是植物资源分配的基本权衡。",
+    "confidence": 0.7,
+    "tags": [],
+    "species": "水稻",
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "IRRI 耐旱育种研究",
+        "description": "耐旱性与产量的权衡",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "qDTY 位点研究",
+        "description": "耐旱 QTL 的产量代价",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "DRO1 基因研究",
+        "description": "深根基因的产量代价",
+        "url": "",
+        "year": 2010
+      }
+    ]
+  },
+  {
+    "id": "rice_chalkiness_quality",
+    "name": "垩白度超标陷阱",
+    "description": "垩白度是稻米外观品质的核心指标。垩白度超过 10% 的稻米在市场上的接受度显著下降。垩白形成受遗传和环境双重影响，高温、高氮等栽培条件会加剧垩白发生。",
+    "trigger_traits": [
+      "rice_chalkiness",
+      "rice_head_rice_recovery",
+      "rice_1000_grain_weight"
+    ],
+    "severity": "WARNING",
+    "historical_examples": [
+      "部分高产品种：垩白度超过 20%，整精米率低于 50%",
+      "高温年份稻米：垩白度普遍增加，品质下降",
+      "大粒型品种：千粒重高但垩白度超标"
+    ],
+    "failed_approaches": [
+      {
+        "description": "不关注垩白度的选育",
+        "reason_failed": "虽然产量达标但品质不达标，市场竞争力差",
+        "year_range": [
+          1990,
+          2010
+        ],
+        "reference": "中国优质稻育种实践"
+      }
+    ],
+    "alternative_directions": [
+      "将垩白度作为品质选育的核心指标，目标 <5%",
+      "利用 Chalk5 等基因的优良等位基因降低垩白度",
+      "优化栽培管理，避免高温和高氮导致的垩白增加",
+      "选择灌浆充分的品种，确保籽粒充实度",
+      "结合整精米率选择，确保碾磨品质"
+    ],
+    "mechanism": "垩白是由于胚乳细胞中淀粉粒排列疏松、空气间隙增大所致。灌浆不充分、高温胁迫、淀粉合成相关基因变异等都是垩白形成的原因。",
+    "confidence": 0.8,
+    "tags": [],
+    "species": "水稻",
+    "evidence": [
+      {
+        "level": "STRONG",
+        "source": "Chalk5 基因研究",
+        "description": "垩白形成的分子机制",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "中国优质稻谷标准 GB/T 17891",
+        "description": "垩白度的品质分级标准",
+        "url": "",
+        "year": 0
+      },
+      {
+        "level": "STRONG",
+        "source": "稻米品质遗传研究",
+        "description": "垩白度的遗传和环境效应",
+        "url": "",
+        "year": 0
+      }
+    ]
+  }
+]
