@@ -155,6 +155,12 @@ class BioLogicEngine:
     def iter_anti_patterns(self):
         return list(self._anti_patterns._patterns.values())
 
+    def iter_constraints(self):
+        return list(self._constraints)
+
+    def trait_ids(self) -> list[str]:
+        return sorted(self._traits.keys())
+
     # -------- 验证管线 --------
 
     def validate(self, goal: BreedingGoal) -> ValidationReport:

@@ -5,6 +5,12 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-09-12
+
+### Changed
+- Streamlit 拆到 `ui/runtime.py` 与 `ui/pages/*`，`app.py` 只做入口
+- 界面不再访问 `engine._traits` 等私有字段
+
 ## [0.2.2] - 2026-09-12
 
 ### Changed

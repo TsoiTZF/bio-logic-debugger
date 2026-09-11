@@ -72,7 +72,8 @@ pytest
 
 ```
 bio_logic_debugger/
-├── app.py                    # Web 界面 (Streamlit)
+├── app.py                    # Streamlit 入口
+├── ui/                       # 页面与侧边栏（与引擎解耦）
 ├── cli.py                    # 命令行界面
 ├── requirements.txt          # 依赖
 ├── core/
