@@ -30,7 +30,14 @@ python cli.py
 进入交互式控制台，或单次快速验证：
 
 ```bash
-python cli.py --validate rice_yield_per_plant >= 50
+python -m bio_logic_debugger.cli --validate rice_yield_per_plant >= 50
+```
+
+跑测试：
+
+```bash
+pip install -e ".[dev]"
+pytest
 ```
 
 ## 功能

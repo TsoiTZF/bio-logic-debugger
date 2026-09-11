@@ -5,6 +5,23 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-09-12
+
+### Added
+- 约束条件表达式求值（AND/OR/NOT/比较），缺变量不误报
+- 引擎/表达式/知识合并的 pytest 用例
+- CLI 入口 `bld`，与 App 共用 `load_and_merge`
+
+### Fixed
+- 约束层只要目标里出现相关性状就会触发的误报
+- `_wants_high` 把任意正区间当成「同时追高」
+- Python 3.10 不支持的 `type` 语句
+- `ValidationContext` 错误地从 domain 导入
+- `pyproject.toml` 与 `requirements.txt` 依赖不一致（pypdf / PyMuPDF）
+
+### Changed
+- 知识库优先级文档与实现对齐：用户扩充 > 社区 > 内置
+
 ## [0.2.0] - 2026-04-28
 
 ### Added

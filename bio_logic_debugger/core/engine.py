@@ -32,6 +32,7 @@ from .domain import (
     Violation,
 )
 from .anti_pattern import AntiPatternMatcher
+from .expr import ExprError, parse, referenced_ids, try_evaluate
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ class ValidationContext:
         )
 
 
-type ValidationLayer = Callable[[ValidationContext], ValidationContext]
+ValidationLayer = Callable[[ValidationContext], ValidationContext]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -138,6 +139,21 @@ class BioLogicEngine:
     def set_llm_callback(self, callback: Callable) -> None:
         """设置 LLM 推理回调"""
         self._llm_callback = callback
+
+    def get_trait(self, trait_id: str) -> Optional[Trait]:
+        return self._traits.get(trait_id)
+
+    def trait_name(self, trait_id: str) -> str:
+        return self._trait_name(trait_id)
+
+    def iter_traits(self):
+        return self._traits.values()
+
+    def iter_correlations(self):
+        return list(self._correlations)
+
+    def iter_anti_patterns(self):
+        return list(self._anti_patterns._patterns.values())
 
     # -------- 验证管线 --------
 
@@ -347,19 +363,23 @@ class BioLogicEngine:
     def _layer_constraint_check(self, ctx: ValidationContext) -> ValidationContext:
         """
         约束规则检查层：
-        检查育种目标是否触发了已知的生物学约束。
+        用 condition_expr 对照目标数值求值。缺变量或语法错误则跳过，不误报。
         """
+        env = self._goal_env(ctx.goal)
         for constraint in self._constraints:
-            # 简单的范围检查：如果约束中涉及的性状都在目标中，触发检查
-            # 这里是简化版，实际中 condition_expr 可以用表达式引擎解析
-            involved = self._parse_trait_refs(constraint.condition_expr)
-            if not involved:
+            fired, skip_reason = try_evaluate(constraint.condition_expr, env)
+            if skip_reason or not fired:
+                if skip_reason and skip_reason.startswith("syntax:"):
+                    logger.warning(
+                        "约束 %s 表达式无法解析: %s",
+                        constraint.id, skip_reason,
+                    )
                 continue
 
-            if not any(t in ctx.goal.trait_ids() for t in involved):
-                continue
-
-            # 构建叙事
+            try:
+                involved = referenced_ids(parse(constraint.condition_expr))
+            except ExprError:
+                involved = []
             narrative_parts = [
                 f"触发了约束规则「{constraint.name}」",
             ]
@@ -455,12 +475,8 @@ class BioLogicEngine:
     def _wants_high(target: Optional[TraitTarget]) -> bool:
         if target is None:
             return False
-        if target.direction in (">=", ">"):
-            return True
-        if target.direction == "range" and target.range_min and target.range_max:
-            avg = (target.range_min + target.range_max) / 2
-            return avg > 0  # 保守估计
-        return False
+        # 只有明确「越大越好」才算同时追高；区间不等于双高
+        return target.direction in (">=", ">")
 
     @staticmethod
     def _downgrade_severity(
@@ -500,14 +516,10 @@ class BioLogicEngine:
         return labels.get(corr.corr_type, "未知关联")
 
     @staticmethod
-    def _parse_trait_refs(expr: str) -> list[str]:
-        """从条件表达式中提取性状引用（简化版）"""
-        if not expr:
-            return []
-        # 简单策略：按空白分割，查找 ${...} 模式的引用
-        # 完整版应使用表达式解析器
-        refs = []
-        for part in expr.replace("(", " ").replace(")", " ").split():
-            if part.startswith("$"):
-                refs.append(part[1:])
-        return refs
+    def _goal_env(goal: BreedingGoal) -> dict:
+        """把目标里有明确数值的性状绑成表达式环境。"""
+        env = {}
+        for target in goal.targets:
+            if target.desired_value is not None:
+                env[target.trait_id] = target.desired_value
+        return env

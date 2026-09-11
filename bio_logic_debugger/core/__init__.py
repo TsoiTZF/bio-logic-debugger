@@ -12,7 +12,7 @@ from .domain import (
     ValidationReport,
     Violation,
 )
-from .engine import BioLogicEngine
+from .engine import BioLogicEngine, ValidationContext
 from .anti_pattern import AntiPatternMatcher
 
 __all__ = [
@@ -20,6 +20,7 @@ __all__ = [
     "AntiPatternMatcher",
     "BiologicalConstraint",
     "BioLogicEngine",
+    "ValidationContext",
     "BreedingGoal",
     "ConstraintSeverity",
     "ConstraintScope",

@@ -18,8 +18,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
-from bio_logic_debugger.core.domain import BreedingGoal, ValidationContext
-from bio_logic_debugger.core.engine import BioLogicEngine
+from bio_logic_debugger.core.domain import BreedingGoal
+from bio_logic_debugger.core.engine import BioLogicEngine, ValidationContext
 
 logger = logging.getLogger(__name__)
 

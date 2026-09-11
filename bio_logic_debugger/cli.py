@@ -21,12 +21,7 @@ from bio_logic_debugger.core.domain import (
     TraitTarget,
 )
 from bio_logic_debugger.core.engine import BioLogicEngine
-from bio_logic_debugger.knowledge.rice_knowledge import (
-    ANTI_PATTERNS,
-    CONSTRAINTS,
-    CORRELATIONS,
-    TRAITS,
-)
+from bio_logic_debugger.knowledge.knowledge_store import load_and_merge
 
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -40,19 +35,21 @@ class BioLogicCLI:
         self._load_default_knowledge()
 
     def _load_default_knowledge(self) -> None:
-        """加载内置知识库"""
-        self.engine.register_traits(TRAITS)
-        self.engine.register_correlations(CORRELATIONS)
-        self.engine.register_constraints(CONSTRAINTS)
-        self.engine.register_anti_patterns(ANTI_PATTERNS)
-        logger.info(f"已加载 {len(TRAITS)} 个性状, {len(CORRELATIONS)} 条关联, "
-                    f"{len(CONSTRAINTS)} 条约束, {len(ANTI_PATTERNS)} 个反模式")
+        traits, correlations, constraints, anti_patterns = load_and_merge()
+        self.engine.register_traits(traits)
+        self.engine.register_correlations(correlations)
+        self.engine.register_constraints(constraints)
+        self.engine.register_anti_patterns(anti_patterns)
+        logger.info(
+            "已加载 %s 个性状, %s 条关联, %s 条约束, %s 个反模式",
+            len(traits), len(correlations), len(constraints), len(anti_patterns),
+        )
 
     # ---- 展示 ----
 
     def list_traits(self, category: str = "") -> None:
         """列出所有性状"""
-        traits = self.engine._traits.values()
+        traits = self.engine.iter_traits()
         if category:
             traits = [t for t in traits if t.category == category]
 
@@ -68,7 +65,7 @@ class BioLogicCLI:
 
     def list_anti_patterns(self) -> None:
         """列出所有反模式"""
-        for ap in self.engine._anti_patterns._patterns.values():
+        for ap in self.engine.iter_anti_patterns():
             severity_tag = {
                 ConstraintSeverity.FATAL: "🔴",
                 ConstraintSeverity.SEVERE: "🟠",
@@ -81,7 +78,7 @@ class BioLogicCLI:
 
     def show_trait_detail(self, trait_id: str) -> None:
         """显示单个性状的详细信息"""
-        trait = self.engine._traits.get(trait_id)
+        trait = self.engine.get_trait(trait_id)
         if not trait:
             print(f"未找到性状: {trait_id}")
             return
@@ -98,10 +95,10 @@ class BioLogicCLI:
 
         # 显示相关关联
         print(f"\n  相关关联:")
-        for corr in self.engine._correlations:
+        for corr in self.engine.iter_correlations():
             if trait.id in (corr.trait_a, corr.trait_b):
                 other = corr.trait_b if corr.trait_a == trait.id else corr.trait_a
-                other_name = self.engine._trait_name(other)
+                other_name = self.engine.trait_name(other)
                 tag = "🔴拮抗" if corr.is_antagonistic() else "🟡权衡" if corr.corr_type.name == "TRADE_OFF" else "🔵相关"
                 print(f"    {tag} {other_name} ({corr.corr_type.name}, r={corr.strength})")
 
@@ -115,7 +112,7 @@ class BioLogicCLI:
         print(f"{'='*60}")
 
         for t in goal.targets:
-            trait = self.engine._traits.get(t.trait_id)
+            trait = self.engine.get_trait(t.trait_id)
             tname = trait.name if trait else t.trait_id
             val = t.desired_value or f"[{t.range_min}~{t.range_max}]"
             dir_symbol = {">=": "≥", "<=": "≤", "==": "=", "range": "∈"}.get(t.direction, t.direction)
@@ -238,11 +235,11 @@ class BioLogicCLI:
 
             priority = int(parts[3]) if len(parts) > 3 else 5
 
-            if trait_id not in self.engine._traits:
+            if self.engine.get_trait(trait_id) is None:
                 print(f"⚠ 性状 '{trait_id}' 不在知识库中，仍将添加")
                 tname = trait_id
             else:
-                tname = self.engine._trait_name(trait_id)
+                tname = self.engine.trait_name(trait_id)
 
             goal.add_target(TraitTarget(trait_id, desired_value=value, direction=direction, priority=priority))
             print(f"  已添加: {tname} {direction} {value} (优先级: {priority})")

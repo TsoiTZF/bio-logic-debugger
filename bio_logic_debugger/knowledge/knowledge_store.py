@@ -4,9 +4,9 @@
 管理知识库的加载、合并、持久化，以及社区知识库的自动同步。
 
 知识库来源层级（优先级从高到低）：
-  1. 社区知识库（从 GitHub raw 拉取的最新 JSON）
-  2. 内置知识库（rice_knowledge.py）
-  3. 本地用户扩充（通过 app 导入添加）
+  1. 本地用户扩充（通过 app 导入添加）
+  2. 社区知识库（从 GitHub raw 拉取的最新 JSON）
+  3. 内置知识库（rice_knowledge.py）
 """
 from __future__ import annotations
 
@@ -413,7 +413,7 @@ def load_and_merge(
 ) -> tuple:
     """
     一站式加载+合并+反序列化。
-    优先使用社区数据，其次内置兜底。
+    优先级：用户扩充 > 社区 JSON > 内置 Python 兜底。
     """
     builtin = load_builtin()
     if has_community_data():
