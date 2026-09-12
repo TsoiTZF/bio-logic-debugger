@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from .domain import (
     AntiPattern,
@@ -32,7 +32,7 @@ from .domain import (
     Violation,
 )
 from .anti_pattern import AntiPatternMatcher
-from .expr import ExprError, parse, referenced_ids, try_evaluate
+from .expr import Binding, ExprError, binding_from_target, parse, referenced_ids, try_evaluate
 
 logger = logging.getLogger(__name__)
 
@@ -136,8 +136,8 @@ class BioLogicEngine:
         else:
             self._layers.insert(index, layer)
 
-    def set_llm_callback(self, callback: Callable) -> None:
-        """设置 LLM 推理回调"""
+    def set_llm_callback(self, callback: Callable | None) -> None:
+        """设置 LLM 推理回调；传 None 关闭。"""
         self._llm_callback = callback
 
     def get_trait(self, trait_id: str) -> Optional[Trait]:
@@ -153,7 +153,7 @@ class BioLogicEngine:
         return list(self._correlations)
 
     def iter_anti_patterns(self):
-        return list(self._anti_patterns._patterns.values())
+        return self._anti_patterns.all_patterns()
 
     def iter_constraints(self):
         return list(self._constraints)
@@ -178,18 +178,11 @@ class BioLogicEngine:
             trait_map={k: v for k, v in self._traits.items()},
         )
 
-        # 执行各层
+        # 各层都跑完：FATAL 不应吞掉约束和反模式。
         for layer in self._layers:
             ctx = layer(ctx)
-            if ctx.is_fatal:
-                # 致命错误，提前终止
-                logger.info(
-                    f"发现致命违反，提前终止验证管线 (layer={layer.__name__})"
-                )
-                break
 
-        # 可选的 LLM 分析
-        if self._llm_callback and not ctx.is_fatal:
+        if self._llm_callback:
             try:
                 ctx = self._llm_callback(ctx)
             except Exception as e:
@@ -269,67 +262,43 @@ class BioLogicEngine:
         goal_traits = set(ctx.goal.trait_ids())
 
         for corr in self._correlations:
-            # 只检查与育种目标相关的关联
-            if corr.trait_a not in goal_traits and corr.trait_b not in goal_traits:
+            if corr.trait_a not in goal_traits or corr.trait_b not in goal_traits:
                 continue
 
-            # 找到用户对这两个性状的目标值
             target_a = self._find_target(ctx.goal, corr.trait_a)
             target_b = self._find_target(ctx.goal, corr.trait_b)
 
-            is_relevant = (
-                (corr.trait_a in goal_traits and corr.trait_b in goal_traits)
-                or (corr.trait_a in goal_traits and corr.trait_b in ctx.trait_map)
-            )
-
-            if not is_relevant:
-                continue
-
-            # 构建叙事
             tname_a = self._trait_name(corr.trait_a)
             tname_b = self._trait_name(corr.trait_b)
 
             if corr.is_antagonistic():
-                # 检查用户是否要求这两个性状同时达到高水平
-                user_wants_both_high = self._wants_high(target_a) and self._wants_high(target_b)
+                trait_a = ctx.trait_map.get(corr.trait_a)
+                trait_b = ctx.trait_map.get(corr.trait_b)
+                user_wants_both_high = (
+                    self._wants_high(target_a, trait_a)
+                    and self._wants_high(target_b, trait_b)
+                )
 
                 if not user_wants_both_high and corr.corr_type == CorrelationType.TRADE_OFF:
-                    # 权衡关系且用户没有同时要求高值，只是提示
                     continue
 
                 if user_wants_both_high:
-                    # 用有效强度（strength × confidence）决定严重等级
-                    effective_strength = abs(corr.strength) * corr.confidence
-                    severity = (
-                        ConstraintSeverity.FATAL
-                        if effective_strength >= 0.7
-                        else ConstraintSeverity.SEVERE
-                        if effective_strength >= 0.5
-                        else ConstraintSeverity.WARNING
-                    )
-
+                    # 负相关是权衡，不是生理不可能。最高只给 WARNING。
                     narrative_parts = [
                         f"在「{tname_a}」和「{tname_b}」之间存在一个已知的{self._corr_type_label(corr)}关系",
-                        f"（相关系数 r = {corr.strength:.2f}）。",
+                        f"（相关系数 r = {corr.strength:.2f}，置信度 {corr.confidence:.2f}）。",
                     ]
                     if corr.mechanism:
                         narrative_parts.append(f"\n\n背后的生理机制：{corr.mechanism}")
 
                     narrative_parts.append(
-                        f"\n\n这意味着当您试图同时提高这两者时，"
-                        f"其中一方的提升将会被另一方拖累。"
+                        f"\n\n同时追求两者走高时，一方的提升可能被另一方拖累。"
+                        f"这是统计关联，不是「生理上不可能」。"
                     )
-
-                    # 如果双方都设置了具体数值，给出冲击评估
-                    if target_a and target_b:
-                        impact = abs(corr.strength) * 100 * 0.5
-                        narrative_parts.append(
-                            f"\n粗略估算，同时追求两个目标可能导致实际达成率下降约 {impact:.0f}%。"
-                        )
 
                     ctx.violations.append(Violation(
                         constraint_id=f"corr.{corr.trait_a}.{corr.trait_b}",
-                        severity=severity,
+                        severity=ConstraintSeverity.WARNING,
                         title=f"拮抗关系：{tname_a} ↔ {tname_b}",
                         description=(
                             f"'{tname_a}' 与 '{tname_b}' 之间存在 {self._corr_type_label(corr)}，"
@@ -416,7 +385,7 @@ class BioLogicEngine:
             pattern = m.anti_pattern
 
             # 精确匹配和高度部分匹配加入到反模式列表
-            if m.match_type in ("exact", "partial") and m.score >= 0.5:
+            if m.match_type == "exact" or (m.match_type == "partial" and m.score >= 0.5):
                 ctx.matched_anti_patterns.append(pattern)
 
                 # 构造历史教训叙事
@@ -478,11 +447,24 @@ class BioLogicEngine:
         return trait.name if trait else trait_id
 
     @staticmethod
-    def _wants_high(target: Optional[TraitTarget]) -> bool:
-        if target is None:
+    def _wants_high(target: Optional[TraitTarget], trait: Optional[Trait] = None) -> bool:
+        """是否在追该性状的「更好一端」。SES 1–9 越大越差，>= 8 不算追优。"""
+        if target is None or target.desired_value is None:
             return False
-        # 只有明确「越大越好」才算同时追高；区间不等于双高
-        return target.direction in (">=", ">")
+        better_high = True if trait is None else trait.higher_is_better
+        lo = hi = None
+        if trait is not None:
+            lo, hi = trait.typical_range
+        mid = None
+        if lo is not None and hi is not None and hi > lo:
+            mid = lo + 0.5 * (hi - lo)
+        if better_high:
+            if target.direction not in (">=", ">"):
+                return False
+            return mid is None or target.desired_value >= mid
+        if target.direction not in ("<=", "<"):
+            return False
+        return mid is None or target.desired_value <= mid
 
     @staticmethod
     def _downgrade_severity(
@@ -523,9 +505,23 @@ class BioLogicEngine:
 
     @staticmethod
     def _goal_env(goal: BreedingGoal) -> dict:
-        """把目标里有明确数值的性状绑成表达式环境。"""
-        env = {}
+        """把目标方向收成区间绑定，并并入环境变量。"""
+        env: dict[str, Any] = {}
         for target in goal.targets:
-            if target.desired_value is not None:
-                env[target.trait_id] = target.desired_value
+            binding = binding_from_target(
+                target.desired_value, target.direction,
+                range_min=target.range_min, range_max=target.range_max,
+            )
+            if binding is not None:
+                env[target.trait_id] = binding
+        for key, value in (goal.environment or {}).items():
+            if isinstance(value, str):
+                env[key] = Binding(value=value, direction="==", kind="enum")
+            else:
+                try:
+                    v = float(value)
+                except (TypeError, ValueError):
+                    env[key] = Binding(value=value, direction="==", kind="enum")
+                else:
+                    env[key] = Binding(value=v, lo=v, hi=v, direction="==", kind="point")
         return env

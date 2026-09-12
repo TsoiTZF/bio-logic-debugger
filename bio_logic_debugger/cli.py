@@ -104,8 +104,13 @@ class BioLogicCLI:
 
     # ---- 验证 ----
 
-    def run_validation(self, goal: BreedingGoal) -> None:
+    def run_validation(self, goal: BreedingGoal, as_json: bool = False):
         """执行验证并打印报告"""
+        report = self.engine.validate(goal)
+        if as_json:
+            print(report.to_json())
+            return report
+
         print(f"\n{'='*60}")
         print(f"  育种目标: {goal.name}")
         print(f"  物种: {goal.species}")
@@ -118,10 +123,11 @@ class BioLogicCLI:
             dir_symbol = {">=": "≥", "<=": "≤", "==": "=", "range": "∈"}.get(t.direction, t.direction)
             print(f"  {tname:20s} {dir_symbol} {val}  (优先级: {t.priority})")
 
-        print()
-        report = self.engine.validate(goal)
-        print(report.narrative())
+        if goal.environment:
+            print("  环境:", goal.environment)
 
+        print()
+        print(report.narrative())
         return report
 
     # ---- 交互模式 ----
@@ -255,12 +261,31 @@ class BioLogicCLI:
         return goal
 
 
+def _parse_env_args(items: list[str]) -> dict:
+    env = {}
+    for item in items or []:
+        if "=" not in item:
+            print(f"忽略无效 --env: {item}")
+            continue
+        key, raw = item.split("=", 1)
+        key = key.strip()
+        raw = raw.strip()
+        if not key:
+            continue
+        try:
+            env[key] = float(raw)
+        except ValueError:
+            env[key] = raw
+    return env
+
+
 def main():
     parser = argparse.ArgumentParser(description="Bio-Logic Debugger — 育种逻辑验证系统")
     parser.add_argument("--trait", "-t", help="查看性状详情")
     parser.add_argument("--list-traits", "-l", action="store_true", help="列出所有性状")
     parser.add_argument("--list-patterns", "-p", action="store_true", help="列出所有反模式")
     parser.add_argument("--validate", "-v", nargs=3, metavar=("TRAIT", "DIR", "VAL"), help="快速验证单个目标")
+    parser.add_argument("--env", action="append", default=[], metavar="KEY=VAL", help="环境变量，可重复，如 drought_severity=severe")
     parser.add_argument("--json", action="store_true", help="JSON 格式输出")
     parser.add_argument("--interactive", "-i", action="store_true", help="交互模式")
 
@@ -286,10 +311,8 @@ def main():
             sys.exit(1)
         goal = BreedingGoal(name="命令行验证", species="水稻")
         goal.add_target(TraitTarget(trait_id, desired_value=value, direction=direction))
-        report = cli.run_validation(goal)
-
-        if args.json:
-            print(report.to_json())
+        goal.environment = _parse_env_args(args.env)
+        cli.run_validation(goal, as_json=args.json)
     else:
         parser.print_help()
 

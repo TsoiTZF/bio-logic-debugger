@@ -198,12 +198,12 @@ def _rule_extract(text: str) -> list[ExtractedItem]:
 
 
 def _llm_extract(text: str, llm_caller: Callable) -> list[ExtractedItem]:
-    """调用 LLM 提取知识"""
+    """调用 LLM 提取知识。llm_caller(system_prompt, user_prompt) -> str。"""
     if not llm_caller:
         return []
 
     try:
-        result_text = llm_caller(text, _build_extract_prompt(text))
+        result_text = llm_caller(EXTRACT_SYSTEM_PROMPT, _build_extract_prompt(text))
     except Exception as e:
         logger.warning(f"LLM 提取失败: {e}")
         return []
@@ -326,7 +326,7 @@ def analyze_text(
     return merged
 
 
-def items_to_traits(items: list[ExtractedItem]) -> list[dict]:
+def items_to_traits(items: list[ExtractedItem], known_traits: list | None = None) -> list[dict]:
     """将提取项中的性状转换为 knowledge_store 可用的 dict"""
     results = []
     seen_names: set[str] = set()
@@ -337,7 +337,7 @@ def items_to_traits(items: list[ExtractedItem]) -> list[dict]:
         if not name or name in seen_names:
             continue
         seen_names.add(name)
-        tid = name_to_id(name)
+        tid = name_to_id(name, known_traits)
         r = item.data.get("range", [None, None])
         results.append({
             "id": tid,
@@ -352,7 +352,7 @@ def items_to_traits(items: list[ExtractedItem]) -> list[dict]:
     return results
 
 
-def items_to_correlations(items: list[ExtractedItem]) -> list[dict]:
+def items_to_correlations(items: list[ExtractedItem], known_traits: list | None = None) -> list[dict]:
     """将提取项中的关联转换为 knowledge_store 可用的 dict"""
     results = []
     seen: set[tuple[str, str]] = set()
@@ -374,8 +374,8 @@ def items_to_correlations(items: list[ExtractedItem]) -> list[dict]:
             "curvilinear": "CURVILINEAR",
         }
         results.append({
-            "trait_a": name_to_id(ta),
-            "trait_b": name_to_id(tb),
+            "trait_a": name_to_id(ta, known_traits),
+            "trait_b": name_to_id(tb, known_traits),
             "corr_type": corr_type_map.get(item.data.get("type", ""), "POSITIVE"),
             "strength": item.data.get("strength", 0.0),
             "confidence": item.confidence,
@@ -386,7 +386,7 @@ def items_to_correlations(items: list[ExtractedItem]) -> list[dict]:
     return results
 
 
-def items_to_constraints(items: list[ExtractedItem]) -> list[dict]:
+def items_to_constraints(items: list[ExtractedItem], known_traits: list | None = None) -> list[dict]:
     """将提取项中的约束转换为 knowledge_store 可用的 dict"""
     results = []
     seen: set[str] = set()
@@ -398,7 +398,7 @@ def items_to_constraints(items: list[ExtractedItem]) -> list[dict]:
             continue
         seen.add(name)
         results.append({
-            "id": name_to_id(name),
+            "id": name_to_id(name, known_traits),
             "name": name,
             "description": item.data.get("description", ""),
             "severity": item.data.get("severity", "WARNING"),
@@ -412,8 +412,22 @@ def items_to_constraints(items: list[ExtractedItem]) -> list[dict]:
     return results
 
 
-def name_to_id(name: str) -> str:
-    """将中文名称转换为 trait id"""
+def name_to_id(name: str, known_traits: list | None = None) -> str:
+    """将名称映射到已有性状 id；匹配不到再生成 extracted_ 前缀。"""
     import hashlib
-    suffix = hashlib.md5(name.encode()).hexdigest()[:8]
+    text = (name or "").strip()
+    if not text:
+        return f"extracted_{hashlib.md5(b'').hexdigest()[:8]}"
+    if known_traits:
+        lowered = text.lower()
+        for trait in known_traits:
+            tid = getattr(trait, "id", None) or (isinstance(trait, dict) and trait.get("id")) or ""
+            tname = getattr(trait, "name", None) or (isinstance(trait, dict) and trait.get("name")) or ""
+            if text == tid or text == tname:
+                return str(tid)
+            if tname and (tname in text or text in tname):
+                return str(tid)
+            if tid and tid.lower() == lowered:
+                return str(tid)
+    suffix = hashlib.md5(text.encode()).hexdigest()[:8]
     return f"extracted_{suffix}"

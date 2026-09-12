@@ -84,6 +84,8 @@ class Trait:
     tags: list[str] = field(default_factory=list)
     species: str = "通用"
     confidence: float = 1.0
+    # SES 1–9 级：1 为优/抗，9 为劣/感，越大越差
+    higher_is_better: bool = True
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -249,6 +251,48 @@ class TraitTarget:
 
 
 @dataclass
+class EnvironmentVariable:
+    """
+    环境变量：不是育种性状，但是约束表达式会引用。
+    例如干旱程度、温度、施氮量。
+    """
+    id: str
+    name: str
+    description: str
+    value_type: str = "number"  # number / enum
+    unit: str = ""
+    enum_values: list[str] = field(default_factory=list)
+
+
+# 内置约束会引用这些 id；UI / CLI 需要能填，校验也要把它们算进合法变量。
+ENVIRONMENT_VARIABLES: list[EnvironmentVariable] = [
+    EnvironmentVariable(
+        id="drought_severity",
+        name="干旱程度",
+        description="田间干旱胁迫等级",
+        value_type="enum",
+        enum_values=["mild", "moderate", "severe"],
+    ),
+    EnvironmentVariable(
+        id="temperature",
+        name="环境温度",
+        description="关键生育期环境温度",
+        value_type="number",
+        unit="°C",
+    ),
+    EnvironmentVariable(
+        id="nitrogen_rate",
+        name="施氮量",
+        description="氮肥施用量",
+        value_type="number",
+        unit="kg/ha",
+    ),
+]
+
+ENVIRONMENT_VAR_IDS: frozenset[str] = frozenset(v.id for v in ENVIRONMENT_VARIABLES)
+
+
+@dataclass
 class BreedingGoal:
     """
     用户定义的育种目标。
@@ -260,6 +304,7 @@ class BreedingGoal:
     species: str = "通用"
     targets: list[TraitTarget] = field(default_factory=list)
     context: str = ""                       # 额外的背景描述
+    environment: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
 
     def add_target(self, target: TraitTarget) -> None:

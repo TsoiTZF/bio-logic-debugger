@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import streamlit as st
 
-from bio_logic_debugger.core.domain import BreedingGoal, ConstraintSeverity, TraitTarget
+from bio_logic_debugger.core.domain import (
+    ENVIRONMENT_VARIABLES,
+    BreedingGoal,
+    ConstraintSeverity,
+    TraitTarget,
+)
 from bio_logic_debugger.core.engine import BioLogicEngine
 from bio_logic_debugger.ui.runtime import trait_label
 
@@ -82,6 +87,28 @@ def render(engine: BioLogicEngine) -> None:
                 st.rerun()
 
             st.divider()
+            env_values: dict = {}
+            with st.expander("🌤 环境条件（可选）"):
+                st.caption("约束里的干旱程度 / 温度 / 施氮量在这里填，不填则相关约束跳过。")
+                for var in ENVIRONMENT_VARIABLES:
+                    if var.value_type == "enum":
+                        options = ["（不设）"] + list(var.enum_values)
+                        chosen = st.selectbox(var.name, options, key=f"env_{var.id}")
+                        if chosen != "（不设）":
+                            env_values[var.id] = chosen
+                    else:
+                        raw = st.text_input(
+                            f"{var.name}（{var.unit}）" if var.unit else var.name,
+                            value="",
+                            key=f"env_{var.id}",
+                        )
+                        raw = raw.strip()
+                        if raw:
+                            try:
+                                env_values[var.id] = float(raw)
+                            except ValueError:
+                                st.warning(f"{var.name} 需要数字")
+
             with st.expander("⚙️ LLM 深度分析（可选）"):
                 llm_enabled = st.checkbox("启用 LLM 分析", value=False)
                 api_key = st.text_input("API Key", type="password", placeholder="sk-... 或设置 BIO_LLM_API_KEY")
@@ -89,7 +116,11 @@ def render(engine: BioLogicEngine) -> None:
                 model = st.text_input("模型名", placeholder="deepseek-chat")
 
             if st.button("🚀 运行验证", type="primary", use_container_width=True):
-                goal = BreedingGoal(name=goal_name, species="水稻")
+                goal = BreedingGoal(
+                    name=goal_name,
+                    species="水稻",
+                    environment=env_values,
+                )
                 for tgt in st.session_state.goal_targets:
                     goal.add_target(TraitTarget(
                         trait_id=tgt["trait_id"],
@@ -99,12 +130,14 @@ def render(engine: BioLogicEngine) -> None:
                     ))
                 if llm_enabled:
                     from bio_logic_debugger.llm.reasoner import LLMConfig, LLMReasoner
-                    reasoner = LLMReasoner(config=LLMConfig(
-                        api_key=api_key or None,
-                        base_url=base_url or None,
-                        model=model or None,
+                    reasoner = LLMReasoner(config=LLMConfig.from_ui(
+                        api_key=api_key,
+                        base_url=base_url,
+                        model=model,
                     ))
-                    engine.set_llm_callback(reasoner.analyze)
+                    engine.set_llm_callback(reasoner.as_validation_layer(engine))
+                else:
+                    engine.set_llm_callback(None)
                 with st.spinner("验证中..."):
                     st.session_state.last_report = engine.validate(goal)
                 st.rerun()
@@ -151,8 +184,8 @@ def render(engine: BioLogicEngine) -> None:
                     f"border-radius:10px;font-size:0.75em;'>{tag}</span>"
                 )
                 expanded = v.severity in (ConstraintSeverity.FATAL, ConstraintSeverity.SEVERE)
-                with st.expander(f"{icon} {badge} {v.title}", expanded=expanded):
-                    st.markdown(v.description, unsafe_allow_html=True)
+                with st.expander(f"{icon} [{tag}] {v.title}", expanded=expanded):
+                    st.markdown(v.description)
                     if v.involved_traits:
                         names = "　".join(f"`{engine.trait_name(tid)}`" for tid in v.involved_traits)
                         st.markdown("**涉及性状：**　" + names)

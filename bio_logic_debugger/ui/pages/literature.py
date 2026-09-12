@@ -92,8 +92,31 @@ def render(engine: BioLogicEngine) -> None:
                 type=["png", "jpg", "jpeg", "gif", "webp"],
             )
             if chart_img:
-                st.image(chart_img, caption="已上传的图表", use_container_width=True)
-                st.session_state.chart_image_bytes = chart_img.read()
+                image_bytes = chart_img.getvalue()
+                st.image(image_bytes, caption="已上传的图表", use_container_width=True)
+                st.session_state.chart_image_bytes = image_bytes
+                vis_key = st.text_input(
+                    "Vision API Key", type="password",
+                    key="_vision_api_key",
+                    placeholder="sk-... 或设置 BIO_LLM_API_KEY",
+                )
+                vis_url = st.text_input(
+                    "Vision Base URL", key="_vision_base_url",
+                    placeholder="https://api.openai.com/v1",
+                )
+                vis_model = st.text_input(
+                    "Vision 模型", key="_vision_model", placeholder="gpt-4o",
+                )
+                if st.button("🔍 解读图表", use_container_width=True):
+                    from bio_logic_debugger.llm.reasoner import LLMConfig, LLMReasoner
+                    reasoner = LLMReasoner(config=LLMConfig.from_ui(
+                        api_key=vis_key, base_url=vis_url, model=vis_model,
+                    ))
+                    reasoner.set_vision_model(vis_model or reasoner._vision_model)
+                    with st.spinner("解读图表中..."):
+                        st.session_state.chart_analysis = reasoner.analyze_vision(image_bytes)
+                if st.session_state.get("chart_analysis"):
+                    st.markdown(st.session_state.chart_analysis)
 
         # ── 自动检索论文 ──────────────────────────────
         with st.expander("🔄 自动检索论文（从知识库关键词搜索 CrossRef）"):
@@ -188,32 +211,42 @@ def render(engine: BioLogicEngine) -> None:
         has_text = "paper_raw_text" in st.session_state and st.session_state.paper_raw_text.strip()
 
         if has_text:
-            col_a, col_b = st.columns([1, 3])
-            with col_a:
-                llm_for_extract = st.checkbox(
-                    "启用 LLM 提取（需配置 API Key）", value=False,
-                    help="通过 LLM 提取更精确的结构化信息",
-                )
-            with col_b:
-                analyze_btn = st.button("🚀 开始分析", type="primary", use_container_width=True)
+            llm_for_extract = st.checkbox(
+                "启用 LLM 提取（需配置 API Key）", value=False,
+                help="通过 LLM 提取更精确的结构化信息",
+            )
+            extract_api_key = ""
+            extract_base_url = ""
+            extract_model = ""
+            if llm_for_extract:
+                with st.expander("⚙️ LLM 配置", expanded=True):
+                    extract_api_key = st.text_input(
+                        "API Key", type="password",
+                        key="_extract_api_key",
+                        placeholder="sk-... 或设置 BIO_LLM_API_KEY",
+                    )
+                    extract_base_url = st.text_input(
+                        "Base URL",
+                        key="_extract_base_url",
+                        placeholder="https://api.deepseek.com/v1",
+                    )
+                    extract_model = st.text_input(
+                        "模型名", key="_extract_model", placeholder="deepseek-chat",
+                    )
+            analyze_btn = st.button("🚀 开始分析", type="primary", use_container_width=True)
 
             if analyze_btn:
                 from bio_logic_debugger.knowledge.paper_analyzer import analyze_text
 
                 llm_caller = None
                 if llm_for_extract:
-                    api_key = st.session_state.get("_extract_api_key", "")
-                    base_url = st.session_state.get("_extract_base_url", "")
-                    model = st.session_state.get("_extract_model", "")
-                    if api_key:
-                        from bio_logic_debugger.llm.reasoner import LLMConfig, LLMReasoner
-                        config = LLMConfig(
-                            api_key=api_key,
-                            base_url=base_url or None,
-                            model=model or None,
-                        )
-                        reasoner = LLMReasoner(config=config)
-                        llm_caller = reasoner.extract_knowledge
+                    from bio_logic_debugger.llm.reasoner import LLMConfig, LLMReasoner
+                    reasoner = LLMReasoner(config=LLMConfig.from_ui(
+                        api_key=extract_api_key,
+                        base_url=extract_base_url,
+                        model=extract_model,
+                    ))
+                    llm_caller = reasoner.chat
 
                 with st.spinner("分析论文中..."):
                     extracted = analyze_text(
@@ -223,21 +256,6 @@ def render(engine: BioLogicEngine) -> None:
 
                 st.session_state.extracted_items = extracted
                 st.success(f"分析完成，共提取 {len(extracted)} 条")
-
-        # LLM API 配置（分析用）
-        if has_text and llm_for_extract:
-            with st.expander("⚙️ LLM 配置"):
-                st.text_input(
-                    "API Key", type="password",
-                    key="_extract_api_key",
-                    placeholder="sk-... 或设置 BIO_LLM_API_KEY",
-                )
-                st.text_input(
-                    "Base URL",
-                    key="_extract_base_url",
-                    placeholder="https://api.deepseek.com/v1",
-                )
-                st.text_input("模型名", key="_extract_model", placeholder="deepseek-chat")
 
         # 展示分析结果
         if "extracted_items" in st.session_state and st.session_state.extracted_items:
@@ -297,7 +315,6 @@ def render(engine: BioLogicEngine) -> None:
                     items_to_traits,
                 )
 
-                # 收集勾选项
                 selected_items = []
                 for cat_key in categories:
                     cat_items = [it for it in items if it.item_type == cat_key]
@@ -309,10 +326,10 @@ def render(engine: BioLogicEngine) -> None:
                 if not selected_items:
                     st.warning("请先勾选要导入的项")
                 else:
-                    # 转换为知识库格式
-                    new_traits = items_to_traits(selected_items)
-                    new_corrs = items_to_correlations(selected_items)
-                    new_constraints = items_to_constraints(selected_items)
+                    known = list(engine.iter_traits())
+                    new_traits = items_to_traits(selected_items, known)
+                    new_corrs = items_to_correlations(selected_items, known)
+                    new_constraints = items_to_constraints(selected_items, known)
 
                     # 注册到引擎
                     from bio_logic_debugger.knowledge.knowledge_store import (
@@ -329,15 +346,22 @@ def render(engine: BioLogicEngine) -> None:
 
                     # 保存到 session_state 用户扩充列表
                     if "_user_traits" not in st.session_state:
-                        st.session_state._user_traits = []
-                        st.session_state._user_corrs = []
-                        st.session_state._user_constraints = []
+                        stored = knowledge_store.load_user_knowledge()
+                        st.session_state._user_traits = list(stored.get("traits", []))
+                        st.session_state._user_corrs = list(stored.get("correlations", []))
+                        st.session_state._user_constraints = list(stored.get("constraints", []))
+                        st.session_state._user_anti_patterns = list(stored.get("anti_patterns", []))
 
                     st.session_state._user_traits.extend(new_traits)
                     st.session_state._user_corrs.extend(new_corrs)
                     st.session_state._user_constraints.extend(new_constraints)
+                    knowledge_store.save_user_knowledge(
+                        traits=st.session_state._user_traits,
+                        correlations=st.session_state._user_corrs,
+                        constraints=st.session_state._user_constraints,
+                    )
 
-                    st.success(f"✅ 已导入 {len(selected_items)} 条到知识库！")
+                    st.success(f"✅ 已导入 {len(selected_items)} 条到知识库（已写入用户目录）！")
                     st.rerun()
 
     # ── Tab 2: 知识库管理 ──────────────────────────────
@@ -346,6 +370,12 @@ def render(engine: BioLogicEngine) -> None:
         st.subheader("知识库管理")
 
         # 当前状态
+        stored_user = knowledge_store.load_user_knowledge()
+        if "_user_traits" not in st.session_state:
+            st.session_state._user_traits = list(stored_user.get("traits", []))
+            st.session_state._user_corrs = list(stored_user.get("correlations", []))
+            st.session_state._user_constraints = list(stored_user.get("constraints", []))
+
         col1, col2, col3 = st.columns(3)
         col1.metric("内置性状", len(knowledge_store.load_builtin().get("traits", [])), border=True)
         col2.metric("社区性状", len(knowledge_store.load_community().get("traits", [])), border=True)
@@ -464,14 +494,33 @@ def render(engine: BioLogicEngine) -> None:
                 if w != 1.0:
                     cstr_weights[c.id] = w
 
-        # 保存按钮
+        # 保存按钮：未展开的 expander 里没有 widget，必须和磁盘已有权重合并。
         if st.button("💾 保存权重并重新加载引擎", type="primary", use_container_width=True):
-            new_weights = {
-                "traits": trait_weights,
-                "correlations": corr_weights,
-                "constraints": cstr_weights,
-            }
-            save_user_weights(new_weights)
+            merged_weights = load_user_weights()
+            merged_weights.setdefault("traits", {})
+            merged_weights.setdefault("correlations", {})
+            merged_weights.setdefault("constraints", {})
+            for tid, w in trait_weights.items():
+                merged_weights["traits"][tid] = w
+            for key, w in corr_weights.items():
+                merged_weights["correlations"][key] = w
+            for cid, w in cstr_weights.items():
+                merged_weights["constraints"][cid] = w
+            # 已渲染滑条设回 1.0 时删除覆盖
+            for t in engine.iter_traits():
+                skey = f"wt_trait_{t.id}"
+                if skey in st.session_state and st.session_state[skey] == 1.0:
+                    merged_weights["traits"].pop(t.id, None)
+            for c in engine.iter_correlations():
+                key = f"{c.trait_a}__{c.trait_b}" if c.trait_a < c.trait_b else f"{c.trait_b}__{c.trait_a}"
+                skey = f"wt_corr_{key}"
+                if skey in st.session_state and st.session_state[skey] == 1.0:
+                    merged_weights["correlations"].pop(key, None)
+            for c in engine.iter_constraints():
+                skey = f"wt_cstr_{c.id}"
+                if skey in st.session_state and st.session_state[skey] == 1.0:
+                    merged_weights["constraints"].pop(c.id, None)
+            save_user_weights(merged_weights)
             st.cache_resource.clear()
             st.success("✅ 权重已保存，引擎已重新加载！")
             st.rerun()

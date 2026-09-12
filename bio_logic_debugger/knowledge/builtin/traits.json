@@ -19,9 +19,9 @@
   {
     "id": "rice_yield_per_ha",
     "name": "亩产",
-    "description": "每亩产量",
+    "description": "每亩稻谷产量。标识含 per_ha 为历史命名，单位是 kg/亩，不是公顷。",
     "category": "产量",
-    "unit": "kg",
+    "unit": "kg/亩",
     "typical_range": [
       300.0,
       1200.0
@@ -388,7 +388,7 @@
   {
     "id": "rice_blast_resistance",
     "name": "稻瘟病抗性",
-    "description": "对稻瘟病的抗性等级",
+    "description": "对稻瘟病的抗性等级 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗病",
     "unit": "级",
     "typical_range": [
@@ -400,12 +400,13 @@
       "核心"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_bacterial_blight_res",
     "name": "白叶枯病抗性",
-    "description": "对白叶枯病的抗性等级",
+    "description": "对白叶枯病的抗性等级 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗病",
     "unit": "级",
     "typical_range": [
@@ -416,12 +417,13 @@
       "抗病"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_sheath_blight_res",
     "name": "纹枯病抗性",
-    "description": "对纹枯病的抗性等级",
+    "description": "对纹枯病的抗性等级 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗病",
     "unit": "级",
     "typical_range": [
@@ -432,12 +434,13 @@
       "抗病"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_false_smut_res",
     "name": "稻曲病抗性",
-    "description": "对稻曲病的抗性等级",
+    "description": "对稻曲病的抗性等级 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗病",
     "unit": "级",
     "typical_range": [
@@ -448,12 +451,13 @@
       "抗病"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_lodging_resistance",
     "name": "抗倒伏性",
-    "description": "茎秆抗倒伏能力",
+    "description": "茎秆抗倒伏能力 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗逆",
     "unit": "级",
     "typical_range": [
@@ -465,12 +469,13 @@
       "株型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_drought_tolerance",
     "name": "耐旱性",
-    "description": "干旱胁迫下的存活和产量保持能力",
+    "description": "干旱胁迫下的存活和产量保持能力 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗逆",
     "unit": "级",
     "typical_range": [
@@ -481,12 +486,13 @@
       "抗逆"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_cold_tolerance",
     "name": "耐冷性",
-    "description": "低温胁迫下的生长和结实能力",
+    "description": "低温胁迫下的生长和结实能力 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗逆",
     "unit": "级",
     "typical_range": [
@@ -497,12 +503,13 @@
       "抗逆"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_heat_tolerance",
     "name": "耐热性",
-    "description": "高温胁迫下的结实能力",
+    "description": "高温胁迫下的结实能力 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗逆",
     "unit": "级",
     "typical_range": [
@@ -513,12 +520,13 @@
       "抗逆"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_salt_tolerance",
     "name": "耐盐性",
-    "description": "盐胁迫下的生长和产量保持能力",
+    "description": "盐胁迫下的生长和产量保持能力 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗逆",
     "unit": "级",
     "typical_range": [
@@ -529,12 +537,13 @@
       "抗逆"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_submergence_tolerance",
     "name": "耐淹性",
-    "description": "淹水胁迫下的存活能力",
+    "description": "淹水胁迫下的存活能力 IRRI SES 1–9 级：1 为高抗/优，9 为高感/差。",
     "category": "抗逆",
     "unit": "级",
     "typical_range": [
@@ -545,7 +554,8 @@
       "抗逆"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_heading_days",

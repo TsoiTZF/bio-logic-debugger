@@ -30,6 +30,7 @@ from bio_logic_debugger.core.domain import (
     Trait,
     TraitCorrelation,
 )
+from bio_logic_debugger.paths import community_dir, user_data_dir
 
 
 logger = logging.getLogger(__name__)
@@ -39,10 +40,15 @@ COMMUNITY_BASE = (
     "https://raw.githubusercontent.com/TsoiTZF/bio-logic-knowledge/main"
 )
 
-# 本地 data 目录：社区缓存（同步会覆盖）
-DATA_DIR = Path(__file__).parent / "data"
 # 内置知识：随包分发，同步不会覆盖
 BUILTIN_DIR = Path(__file__).parent / "builtin"
+
+_SCHEMA_REQUIRED = {
+    "traits.json": {"id", "name"},
+    "correlations.json": {"trait_a", "trait_b", "corr_type", "strength"},
+    "constraints.json": {"id", "name", "severity"},
+    "anti_patterns.json": {"id", "name", "trigger_traits"},
+}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -61,21 +67,34 @@ def trait_to_dict(t: Trait) -> dict:
         "tags": t.tags,
         "species": t.species,
         "confidence": t.confidence,
+        "higher_is_better": t.higher_is_better,
     }
+
+
+def _infer_higher_is_better(d: dict, typical: tuple) -> bool:
+    if "higher_is_better" in d:
+        return bool(d["higher_is_better"])
+    lo, hi = typical
+    # IRRI SES 1–9：1 优/抗，9 劣/感
+    if d.get("unit") == "级" and lo == 1 and hi == 9:
+        return False
+    return True
 
 
 def trait_from_dict(d: dict) -> Trait:
     r = d.get("typical_range", [None, None])
+    typical = (r[0], r[1]) if isinstance(r, list) else (None, None)
     return Trait(
         id=d["id"],
         name=d["name"],
         description=d.get("description", ""),
         category=d.get("category", ""),
         unit=d.get("unit", ""),
-        typical_range=(r[0], r[1]) if isinstance(r, list) else (None, None),
+        typical_range=typical,
         tags=d.get("tags", []),
         species=d.get("species", "通用"),
         confidence=d.get("confidence", 1.0),
+        higher_is_better=_infer_higher_is_better(d, typical),
     )
 
 
@@ -230,31 +249,54 @@ def anti_pattern_from_dict(d: dict) -> AntiPattern:
 # ═══════════════════════════════════════════════════════════════
 
 
-def sync_from_community() -> bool:
-    """从社区知识库仓库拉取最新的 JSON 文件到本地 data/ 目录"""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+def validate_knowledge_list(fname: str, data: Any) -> None:
+    """社区 JSON 必须是对象数组，且含最低字段。不通过则拒绝写入。"""
+    required = _SCHEMA_REQUIRED.get(fname)
+    if required is None:
+        raise ValueError(f"未知知识文件: {fname}")
+    if not isinstance(data, list):
+        raise ValueError(f"{fname} 必须是 JSON 数组")
+    for i, item in enumerate(data):
+        if not isinstance(item, dict):
+            raise ValueError(f"{fname}[{i}] 必须是对象")
+        missing = required - set(item.keys())
+        if missing:
+            raise ValueError(f"{fname}[{i}] 缺少字段: {sorted(missing)}")
 
+
+def sync_from_community() -> bool:
+    """从社区仓库拉取 JSON 到用户目录。校验失败的文件不覆盖本地。"""
+    dest_dir = community_dir()
     files = ["traits.json", "correlations.json", "constraints.json", "anti_patterns.json"]
     success = True
+    fetched: dict[str, Any] = {}
+
+    try:
+        import httpx
+    except ImportError:
+        logger.warning("同步失败: 未安装 httpx")
+        return False
 
     for fname in files:
         url = f"{COMMUNITY_BASE}/{fname}"
         try:
-            import httpx
             resp = httpx.get(url, timeout=15)
             resp.raise_for_status()
             data = resp.json()
-            dest = DATA_DIR / fname
-            with open(dest, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-            logger.info(f"已同步 {fname} ({len(data)} 条)")
+            validate_knowledge_list(fname, data)
+            fetched[fname] = data
         except Exception as e:
             logger.warning(f"同步 {fname} 失败: {e}")
             success = False
 
-    # 写入同步时间戳
+    for fname, data in fetched.items():
+        dest = dest_dir / fname
+        with open(dest, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        logger.info(f"已同步 {fname} ({len(data)} 条)")
+
     if success:
-        ts_path = DATA_DIR / ".sync_timestamp"
+        ts_path = dest_dir / ".sync_timestamp"
         ts_path.write_text(str(int(time.time())), encoding="utf-8")
 
     return success
@@ -262,7 +304,7 @@ def sync_from_community() -> bool:
 
 def get_last_sync_time() -> Optional[str]:
     """获取最后一次同步的时间"""
-    ts_path = DATA_DIR / ".sync_timestamp"
+    ts_path = community_dir() / ".sync_timestamp"
     if ts_path.exists():
         ts = ts_path.read_text(encoding="utf-8").strip()
         try:
@@ -275,14 +317,15 @@ def get_last_sync_time() -> Optional[str]:
 
 
 def has_community_data() -> bool:
-    """检查本地是否有社区知识库数据"""
-    return all((DATA_DIR / f).exists() for f in ["traits.json", "correlations.json"])
+    """检查用户目录是否有社区知识库数据"""
+    dest = community_dir()
+    return all((dest / f).exists() for f in ["traits.json", "correlations.json"])
 
 
 def load_community() -> dict:
-    """从本地 data/ 目录加载社区知识库数据（JSON 格式的原始 dict）"""
+    """从用户目录加载社区知识库。"""
     try:
-        return _load_json_bundle(DATA_DIR)
+        return _load_json_bundle(community_dir())
     except Exception as e:
         logger.warning(f"加载社区知识库失败: {e}")
         return {"traits": [], "correlations": [], "constraints": [], "anti_patterns": []}
@@ -335,6 +378,11 @@ def merge_knowledge(
 
     result = {"traits": [], "correlations": [], "constraints": [], "anti_patterns": []}
 
+    def pair_key(item: dict) -> tuple[str, str]:
+        a = item.get("trait_a", "")
+        b = item.get("trait_b", "")
+        return (a, b) if a <= b else (b, a)
+
     # 1. builtin（最低优先级）
     for item in builtin.get("traits", []):
         tid = item.get("id", "")
@@ -342,7 +390,7 @@ def merge_knowledge(
             result["traits"].append(item)
             seen_traits.add(tid)
     for item in builtin.get("correlations", []):
-        key = (item.get("trait_a", ""), item.get("trait_b", ""))
+        key = pair_key(item)
         if key not in seen_corrs:
             result["correlations"].append(item)
             seen_corrs.add(key)
@@ -366,9 +414,9 @@ def merge_knowledge(
             result["traits"].append(item)
             seen_traits.add(tid)
     for item in community.get("correlations", []):
-        key = (item.get("trait_a", ""), item.get("trait_b", ""))
+        key = pair_key(item)
         if key in seen_corrs:
-            _replace_in_list(result["correlations"], lambda x: (x.get("trait_a", ""), x.get("trait_b", "")) == key, True, item)
+            _replace_in_list(result["correlations"], lambda x, k=key: pair_key(x) == k, True, item)
         else:
             result["correlations"].append(item)
             seen_corrs.add(key)
@@ -394,12 +442,14 @@ def merge_knowledge(
             _replace_in_list(result["traits"], "id", tid, item)
         else:
             result["traits"].append(item)
+            seen_traits.add(tid)
     for item in (user_correlations or []):
-        key = (item.get("trait_a", ""), item.get("trait_b", ""))
+        key = pair_key(item)
         if key in seen_corrs:
-            _replace_in_list(result["correlations"], lambda x: (x.get("trait_a", ""), x.get("trait_b", "")) == key, True, item)
+            _replace_in_list(result["correlations"], lambda x, k=key: pair_key(x) == k, True, item)
         else:
             result["correlations"].append(item)
+            seen_corrs.add(key)
     for item in (user_constraints or []):
         cid = item.get("id", "")
         if cid in seen_constraints:
@@ -453,35 +503,78 @@ def export_user_knowledge(
     return json.dumps(export, ensure_ascii=False, indent=2)
 
 
+def user_knowledge_path() -> Path:
+    return user_data_dir() / "user_knowledge.json"
+
+
+def empty_bundle() -> dict:
+    return {"traits": [], "correlations": [], "constraints": [], "anti_patterns": []}
+
+
+def load_user_knowledge() -> dict:
+    path = user_knowledge_path()
+    if not path.exists():
+        return empty_bundle()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return empty_bundle()
+        result = empty_bundle()
+        for key in result:
+            items = data.get(key, [])
+            result[key] = items if isinstance(items, list) else []
+        return result
+    except Exception as e:
+        logger.warning(f"加载用户知识失败: {e}")
+        return empty_bundle()
+
+
+def save_user_knowledge(
+    traits: list[dict] | None = None,
+    correlations: list[dict] | None = None,
+    constraints: list[dict] | None = None,
+    anti_patterns: list[dict] | None = None,
+) -> None:
+    current = load_user_knowledge()
+    if traits is not None:
+        current["traits"] = traits
+    if correlations is not None:
+        current["correlations"] = correlations
+    if constraints is not None:
+        current["constraints"] = constraints
+    if anti_patterns is not None:
+        current["anti_patterns"] = anti_patterns
+    path = user_knowledge_path()
+    path.write_text(json.dumps(current, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def load_and_merge(
     user_traits=None, user_correlations=None,
     user_constraints=None, user_anti_patterns=None,
 ) -> tuple:
     """
     一站式加载+合并+反序列化。
-    优先级：用户扩充 > 社区 JSON > 内置 Python 兜底。
+    优先级：用户扩充 > 社区 JSON > 内置兜底。
+    未显式传入用户知识时，从用户目录读取持久化内容。
     """
     builtin = load_builtin()
     if has_community_data():
         community = load_community()
     else:
-        community = {"traits": [], "correlations": [], "constraints": [], "anti_patterns": []}
+        community = empty_bundle()
 
+    stored = load_user_knowledge()
     merged = merge_knowledge(
         builtin, community,
-        user_traits=user_traits,
-        user_correlations=user_correlations,
-        user_constraints=user_constraints,
-        user_anti_patterns=user_anti_patterns,
+        user_traits=user_traits if user_traits is not None else stored["traits"],
+        user_correlations=(
+            user_correlations if user_correlations is not None else stored["correlations"]
+        ),
+        user_constraints=(
+            user_constraints if user_constraints is not None else stored["constraints"]
+        ),
+        user_anti_patterns=(
+            user_anti_patterns if user_anti_patterns is not None else stored["anti_patterns"]
+        ),
     )
-    result = deserialize_all(merged)
-
-    # 应用用户调整的权重
-    try:
-        from bio_logic_debugger.knowledge.weight_store import apply_weights_to_engine
-        # 注意：此时 engine 还未创建，无法直接调用。
-        # 权重的应用延迟到 engine 注册所有知识之后，在 app.py 中处理。
-    except ImportError:
-        pass
-
-    return result
+    return deserialize_all(merged)

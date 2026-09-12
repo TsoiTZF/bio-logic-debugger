@@ -92,19 +92,20 @@ class AntiPatternMatcher:
             matched = goal_traits & pattern_traits
             missing = pattern_traits - goal_traits
 
-            if not matched:
+            if not matched or not pattern_traits:
                 continue
 
-            # 计算匹配度：Jaccard 相似度 × 置信度
-            jaccard = len(matched) / len(pattern_traits | goal_traits)
-            score = jaccard * pattern.confidence
+            # 覆盖率：反模式触发性状被目标命中的比例。
+            # 不用 Jaccard：额外目标性状不应把已命中的死胡同打下去。
+            coverage = len(matched) / len(pattern_traits)
+            score = coverage * pattern.confidence
 
             if score < self._confidence_threshold:
                 continue
 
             if matched == pattern_traits:
                 match_type = "exact"
-            elif len(matched) >= len(pattern_traits) * 0.5:
+            elif coverage >= 0.5:
                 match_type = "partial"
             else:
                 match_type = "weak"
@@ -136,6 +137,9 @@ class AntiPatternMatcher:
     @property
     def count(self) -> int:
         return len(self._patterns)
+
+    def all_patterns(self) -> list[AntiPattern]:
+        return list(self._patterns.values())
 
     def trait_coverage(self) -> dict[str, int]:
         """返回覆盖每个性状的反模式数量"""

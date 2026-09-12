@@ -14,11 +14,13 @@ from pathlib import Path
 from typing import Any, Optional
 
 from bio_logic_debugger.core.engine import BioLogicEngine
+from bio_logic_debugger.paths import user_data_dir
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).parent / "data"
-WEIGHTS_PATH = DATA_DIR / "user_weights.json"
+
+def _weights_path() -> Path:
+    return user_data_dir() / "user_weights.json"
 
 DEFAULT_WEIGHTS = {
     "traits": {},
@@ -28,16 +30,17 @@ DEFAULT_WEIGHTS = {
 
 
 def _ensure_dir() -> None:
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    user_data_dir()
 
 
 def load_weights() -> dict[str, dict[str, float]]:
     """加载用户调整过的权重配置"""
-    if not WEIGHTS_PATH.exists():
+    path = _weights_path()
+    if not path.exists():
         return dict(DEFAULT_WEIGHTS)
 
     try:
-        data = json.loads(WEIGHTS_PATH.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
         # 保证所有 key 存在
         result = dict(DEFAULT_WEIGHTS)
         result.update(data)
@@ -51,7 +54,7 @@ def save_weights(weights: dict[str, dict[str, float]]) -> None:
     """批量保存权重配置"""
     _ensure_dir()
     try:
-        WEIGHTS_PATH.write_text(
+        _weights_path().write_text(
             json.dumps(weights, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )

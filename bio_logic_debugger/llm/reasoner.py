@@ -149,9 +149,21 @@ class LLMConfig:
     def from_env(cls) -> "LLMConfig":
         """从环境变量加载配置"""
         return cls(
-            api_key=os.getenv("BIO_LLM_API_KEY", ""),
-            base_url=os.getenv("BIO_LLM_BASE_URL", "https://api.openai.com/v1"),
-            model=os.getenv("BIO_LLM_MODEL", "gpt-4o"),
+            api_key=os.getenv("BIO_LLM_API_KEY", "") or "",
+            base_url=os.getenv("BIO_LLM_BASE_URL", "") or "https://api.openai.com/v1",
+            model=os.getenv("BIO_LLM_MODEL", "") or "gpt-4o",
+        )
+
+    @classmethod
+    def from_ui(cls, api_key: str = "", base_url: str = "", model: str = "") -> "LLMConfig":
+        """界面输入优先，空值回落到环境变量，绝不把 None 传进 URL。"""
+        env = cls.from_env()
+        return cls(
+            api_key=(api_key or env.api_key or ""),
+            base_url=(base_url or env.base_url or "https://api.openai.com/v1"),
+            model=(model or env.model or "gpt-4o"),
+            temperature=env.temperature,
+            max_tokens=env.max_tokens,
         )
 
 
@@ -176,6 +188,13 @@ class LLMReasoner:
 
     def set_vision_model(self, model: str) -> None:
         self._vision_model = model
+
+    def chat(self, system_prompt: str, user_prompt: str) -> str:
+        """统一的 (system, user) -> str 入口，供文献提取等调用。"""
+        if not self.config.api_key:
+            logger.warning("未配置 LLM API Key，跳过 LLM 调用")
+            return "[LLM 分析未启用：未配置 API Key]"
+        return self._http_chat(system_prompt, user_prompt)
 
     def analyze(self, goal: BreedingGoal, engine: BioLogicEngine) -> str:
         """执行 LLM 分析"""
@@ -277,15 +296,16 @@ class LLMReasoner:
         """通过 HTTP 调用 LLM API 进行育种分析"""
         # 收集知识库中的上下文
         context_parts = []
-        for corr in engine._correlations:
-            if corr.trait_a in goal.trait_ids() or corr.trait_b in goal.trait_ids():
+        goal_ids = set(goal.trait_ids())
+        for corr in engine.iter_correlations():
+            if corr.trait_a in goal_ids or corr.trait_b in goal_ids:
                 context_parts.append(
                     f"[关联] {corr.trait_a} ↔ {corr.trait_b}: "
                     f"{corr.corr_type.name} (r={corr.strength}), "
                     f"机制: {corr.mechanism[:100] if corr.mechanism else '无'}"
                 )
-        for ap in engine._anti_patterns._patterns.values():
-            if any(t in goal.trait_ids() for t in ap.trigger_traits):
+        for ap in engine.iter_anti_patterns():
+            if any(t in goal_ids for t in ap.trigger_traits):
                 context_parts.append(
                     f"[反模式] {ap.name}: {ap.description[:150]}"
                 )

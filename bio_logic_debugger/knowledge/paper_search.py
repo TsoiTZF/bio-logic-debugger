@@ -10,10 +10,13 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
+from bio_logic_debugger.paths import user_data_dir
+
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path(__file__).parent / "data"
-SEEN_PAPERS_PATH = DATA_DIR / "seen_papers.json"
+
+def _seen_papers_path() -> Path:
+    return user_data_dir() / "seen_papers.json"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -157,10 +160,11 @@ def search_all_keywords(
 
 def load_seen_papers() -> set[str]:
     """加载已处理过的论文 DOI 集合"""
-    if not SEEN_PAPERS_PATH.exists():
+    path = _seen_papers_path()
+    if not path.exists():
         return set()
     try:
-        data = json.loads(SEEN_PAPERS_PATH.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
         return set(data.get("dois", []))
     except Exception as e:
         logger.warning(f"加载 seen_papers 失败: {e}")
@@ -169,9 +173,9 @@ def load_seen_papers() -> set[str]:
 
 def save_seen_papers(dois: set[str]) -> None:
     """持久化已处理过的论文 DOI"""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    path = _seen_papers_path()
     try:
-        SEEN_PAPERS_PATH.write_text(
+        path.write_text(
             json.dumps({"dois": sorted(dois)}, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )

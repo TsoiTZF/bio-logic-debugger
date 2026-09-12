@@ -5,6 +5,21 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2026-09-12
+
+### Changed
+- 负相关最高 WARNING，去掉虚假「达成率」；FATAL 不再截断后续层
+- 反模式按覆盖率匹配，额外性状不再把已命中模式打下去
+- 约束按目标区间求值；环境变量（干旱/温度/氮肥）可绑定
+- `_wants_high` 对照典型范围中位；SES 1–9 级越大越差
+- 社区同步改为手动、写入用户目录并校验 schema
+- 用户知识持久化到 `~/.bio-logic-debugger/`
+- LLM 接线改为 `as_validation_layer` / `chat(system, user)`
+
+### Added
+- MIT License
+- 内置约束变量必须属于性状或已声明环境变量的测试
+
 ## [0.2.3] - 2026-09-12
 
 ### Added

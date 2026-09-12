@@ -11,7 +11,7 @@ from typing import Any, Optional
 logger = logging.getLogger(__name__)
 
 CROSSREF_BASE = "https://api.crossref.org/works"
-USER_AGENT = "BioLogicDebugger/1.0 (mailto:user@example.com)"
+USER_AGENT = "BioLogicDebugger/0.3 (https://github.com/TsoiTZF/bio-logic-debugger)"
 
 
 def _build_headers() -> dict[str, str]:

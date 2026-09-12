@@ -74,14 +74,26 @@ def test_unknown_trait_is_suggestion_not_crash():
     assert any("不在当前知识库" in s for s in report.suggestions)
 
 
-def test_antagonistic_both_high_is_fatal():
+def test_antagonistic_both_high_is_warning_not_fatal():
     engine = _engine()
     goal = BreedingGoal(name="双高", species="水稻")
     goal.add_target(TraitTarget("rice_yield_per_plant", desired_value=50, direction=">="))
     goal.add_target(TraitTarget("rice_amylose_content", desired_value=28, direction=">="))
     report = engine.validate(goal)
-    assert any(v.constraint_id.startswith("corr.") for v in report.violations)
-    assert not report.passed
+    corrs = [v for v in report.violations if v.constraint_id.startswith("corr.")]
+    assert corrs
+    assert all(v.severity == ConstraintSeverity.WARNING for v in corrs)
+    assert all("达成率" not in v.narrative for v in corrs)
+    # 反模式仍可能是 SEVERE，相关层自己不得再标 FATAL
+
+
+def test_midrange_plus_is_not_chasing_high():
+    engine = _engine()
+    goal = BreedingGoal(name="中低产", species="水稻")
+    goal.add_target(TraitTarget("rice_yield_per_plant", desired_value=20, direction=">="))
+    goal.add_target(TraitTarget("rice_amylose_content", desired_value=28, direction=">="))
+    report = engine.validate(goal)
+    assert not any(v.constraint_id.startswith("corr.") for v in report.violations)
 
 
 def test_range_direction_is_not_automatically_high():
@@ -146,6 +158,30 @@ def test_builtin_heading_constraint_uses_real_expr():
     ok.add_target(TraitTarget("rice_heading_days", desired_value=90, direction=">="))
     report = engine.validate(ok)
     assert not any(v.constraint_id == "rice_extreme_precocity" for v in report.violations)
+
+
+def test_constraint_interval_does_not_fire_when_goal_only_may_cross():
+    engine = _engine()
+    goal = BreedingGoal(name="抽穗下界50", species="水稻")
+    goal.add_target(TraitTarget("rice_heading_days", desired_value=50, direction=">="))
+    report = engine.validate(goal)
+    assert not any(v.constraint_id == "rice_extreme_precocity" for v in report.violations)
+
+
+def test_environment_binds_constraint():
+    engine = _engine()
+    engine.register_constraint(BiologicalConstraint(
+        id="env_demo",
+        name="干旱环境",
+        description="",
+        severity=ConstraintSeverity.WARNING,
+        condition_expr="$drought_severity = 'severe'",
+        confidence=1.0,
+    ))
+    goal = BreedingGoal(name="旱", species="水稻", environment={"drought_severity": "severe"})
+    goal.add_target(TraitTarget("rice_yield_per_plant", desired_value=50, direction=">="))
+    report = engine.validate(goal)
+    assert any(v.constraint_id == "env_demo" for v in report.violations)
 
 
 def test_anti_pattern_exact_match():

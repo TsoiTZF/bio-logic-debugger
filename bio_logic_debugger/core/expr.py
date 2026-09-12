@@ -12,12 +12,42 @@
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any, Union
 
 
 class ExprError(ValueError):
     pass
+
+
+@dataclass(frozen=True)
+class Binding:
+    """
+    变量绑定。
+
+    - 点值：lo == hi == value（或 kind=enum 的字符串）
+    - 区间：>= v → [v, +∞)；<= v → (-∞, v]；range → [min, max]
+    direction 用来决定「推向危险区用 may，反向用 must」。
+    """
+    value: Any = None
+    lo: float | None = None
+    hi: float | None = None
+    direction: str = "=="
+    kind: str = "point"  # point / interval / enum
+
+    def numeric_interval(self) -> tuple[float, float] | None:
+        if self.kind == "enum":
+            return None
+        if self.kind == "point" and self.value is not None:
+            try:
+                v = float(self.value)
+            except (TypeError, ValueError):
+                return None
+            return v, v
+        lo = self.lo if self.lo is not None else -math.inf
+        hi = self.hi if self.hi is not None else math.inf
+        return lo, hi
 
 
 @dataclass(frozen=True)
@@ -79,12 +109,41 @@ def parse(expr: str) -> Node:
     return node
 
 
+def binding_from_target(desired_value: Any, direction: str,
+                       range_min: float | None = None,
+                       range_max: float | None = None) -> Binding | None:
+    """把育种目标方向收成区间绑定。无数值则无法判定。"""
+    if direction == "range":
+        if range_min is None and range_max is None:
+            return None
+        return Binding(
+            value=range_min if range_min is not None else range_max,
+            lo=range_min,
+            hi=range_max,
+            direction="range",
+            kind="interval",
+        )
+    if desired_value is None:
+        return None
+    if isinstance(desired_value, str):
+        return Binding(value=desired_value, direction=direction, kind="enum")
+    try:
+        v = float(desired_value)
+    except (TypeError, ValueError):
+        return Binding(value=desired_value, direction=direction, kind="enum")
+    if direction in (">=", ">"):
+        return Binding(value=v, lo=v, hi=None, direction=direction, kind="interval")
+    if direction in ("<=", "<"):
+        return Binding(value=v, lo=None, hi=v, direction=direction, kind="interval")
+    return Binding(value=v, lo=v, hi=v, direction=direction or "==", kind="point")
+
+
 def evaluate(node: Node, env: dict[str, Any]) -> bool:
     """env 缺变量时抛 KeyError，由调用方当成「无法判定」。"""
     if isinstance(node, Compare):
         if node.left.name not in env:
             raise KeyError(node.left.name)
-        return _compare(env[node.left.name], node.op, node.right.value)
+        return _eval_compare(env[node.left.name], node.op, node.right.value)
     if isinstance(node, Not):
         return not evaluate(node.inner, env)
     if isinstance(node, BoolOp):
@@ -110,6 +169,70 @@ def try_evaluate(expr: str, env: dict[str, Any]) -> tuple[bool, str]:
         return evaluate(node, env), ""
     except KeyError as e:
         return False, f"unbound:{e.args[0]}"
+
+
+def _eval_compare(raw: Any, op: str, right: Any) -> bool:
+    if isinstance(raw, Binding):
+        return _eval_binding(raw, op, right)
+    return _compare(raw, op, right)
+
+
+def _direction_agrees(direction: str, op: str) -> bool:
+    pushing_high = direction in (">=", ">")
+    pushing_low = direction in ("<=", "<")
+    danger_high = op in (">", ">=")
+    danger_low = op in ("<", "<=")
+    return (pushing_high and danger_high) or (pushing_low and danger_low)
+
+
+def _interval_compare(lo: float, hi: float, op: str, right: Any) -> tuple[bool, bool]:
+    """返回 (must_true, may_true)。"""
+    if op in ("=", "==", "!="):
+        try:
+            rv = float(right)
+        except (TypeError, ValueError):
+            return False, False
+        inside = lo <= rv <= hi
+        if op == "!=":
+            must = rv < lo or rv > hi
+            may = not (lo == hi == rv)
+            return must, may
+        must = lo == hi == rv
+        return must, inside
+    try:
+        rv = float(right)
+    except (TypeError, ValueError):
+        return False, False
+    if op == ">":
+        return lo > rv, hi > rv
+    if op == ">=":
+        return lo >= rv, hi >= rv
+    if op == "<":
+        return hi < rv, lo < rv
+    if op == "<=":
+        return hi <= rv, lo <= rv
+    raise ExprError(f"未知比较符: {op}")
+
+
+def _eval_binding(binding: Binding, op: str, right: Any) -> bool:
+    if binding.kind == "enum" or (
+        binding.kind != "interval" and isinstance(binding.value, str)
+    ):
+        return _compare(binding.value, op, right)
+    interval = binding.numeric_interval()
+    if interval is None:
+        return _compare(binding.value, op, right)
+    lo, hi = interval
+    must, may = _interval_compare(lo, hi, op, right)
+    if op in ("=", "=="):
+        return must
+    if op == "!=":
+        return may
+    if binding.direction == "range":
+        return may
+    if _direction_agrees(binding.direction, op):
+        return may
+    return must
 
 
 def _compare(left: Any, op: str, right: Any) -> bool:
