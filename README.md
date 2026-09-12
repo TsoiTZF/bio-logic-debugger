@@ -115,6 +115,10 @@ bio_logic_debugger/
 
 详细更新日志见 [KNOWLEDGE_UPDATE_LOG.md](KNOWLEDGE_UPDATE_LOG.md)
 
+## 软著底稿
+
+登记用名称、功能说明、操作说明书和源码交存顺序见 [`docs/ruanzhu/`](docs/ruanzhu/00-填写说明.md)。
+
 ## 扩展
 
 创建新的知识库，参考 `knowledge/rice_knowledge.py` 的格式定义你的作物：
