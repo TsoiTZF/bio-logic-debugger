@@ -323,7 +323,7 @@
   {
     "id": "rice_chalkiness",
     "name": "垩白度",
-    "description": "垩白粒占总粒数的百分比",
+    "description": "垩白粒占总粒数的百分比。越低越好。",
     "category": "品质",
     "unit": "%",
     "typical_range": [
@@ -335,7 +335,8 @@
       "外观"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_head_rice_recovery",
@@ -352,7 +353,8 @@
       "碾磨"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_alkali_spreading_value",

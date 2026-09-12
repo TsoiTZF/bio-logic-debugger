@@ -3,10 +3,10 @@
 
 管理知识库的加载、合并、持久化，以及社区知识库的手动同步。
 
-知识库来源层级（优先级从高到低）：
-  1. 本地用户扩充（通过 app 导入添加）
-  2. 社区知识库（从 GitHub raw 拉取的最新 JSON）
-  3. 内置知识库（rice_knowledge.py）
+知识库来源层级：
+  1. 本地用户扩充（可覆盖同 id）
+  2. 内置知识库（随包 JSON，不被社区覆盖）
+  3. 社区知识库（只新增；过时条目不能把内置改坏）
 """
 from __future__ import annotations
 
@@ -363,6 +363,15 @@ def load_builtin_objects() -> tuple:
     return deserialize_all(load_builtin())
 
 
+def _pair_key(item: dict, alias_map: dict[str, str] | None = None) -> tuple[str, str]:
+    a = item.get("trait_a", "") or ""
+    b = item.get("trait_b", "") or ""
+    if alias_map:
+        a = alias_map.get(a, a)
+        b = alias_map.get(b, b)
+    return (a, b) if a <= b else (b, a)
+
+
 def merge_knowledge(
     builtin: dict,
     community: dict,
@@ -372,100 +381,119 @@ def merge_knowledge(
     user_anti_patterns: Optional[list[dict]] = None,
 ) -> dict:
     """
-    合并三源知识库，优先级：user > community > builtin。
-    以 trait id 和 correlation (trait_a, trait_b) 为去重 key。
+    合并三源知识库。
+    builtin 打底；community 只新增（同 id / 别名 / 关联对不覆盖内置）；
+    user 可覆盖一切。
     """
     seen_traits: set[str] = set()
     seen_corrs: set[tuple[str, str]] = set()
     seen_constraints: set[str] = set()
     seen_patterns: set[str] = set()
-
     result = {"traits": [], "correlations": [], "constraints": [], "anti_patterns": []}
+    alias_map: dict[str, str] = {}
 
-    def pair_key(item: dict) -> tuple[str, str]:
-        a = item.get("trait_a", "")
-        b = item.get("trait_b", "")
-        return (a, b) if a <= b else (b, a)
+    def remember_trait(item: dict) -> None:
+        tid = item.get("id") or ""
+        if not tid:
+            return
+        result["traits"].append(item)
+        seen_traits.add(tid)
+        alias_map[tid] = tid
+        for alias in item.get("aliases") or []:
+            if alias:
+                alias_map[alias] = tid
 
-    # 1. builtin（最低优先级）
+    def remember_corr(item: dict) -> None:
+        a = alias_map.get(item.get("trait_a", ""), item.get("trait_a", ""))
+        b = alias_map.get(item.get("trait_b", ""), item.get("trait_b", ""))
+        stored = dict(item)
+        stored["trait_a"] = a
+        stored["trait_b"] = b
+        result["correlations"].append(stored)
+        seen_corrs.add(_pair_key(stored))
+
     for item in builtin.get("traits", []):
         tid = item.get("id", "")
-        if tid not in seen_traits:
-            result["traits"].append(item)
-            seen_traits.add(tid)
+        if tid and tid not in seen_traits:
+            remember_trait(item)
     for item in builtin.get("correlations", []):
-        key = pair_key(item)
+        key = _pair_key(item, alias_map)
         if key not in seen_corrs:
-            result["correlations"].append(item)
-            seen_corrs.add(key)
+            remember_corr(item)
     for item in builtin.get("constraints", []):
         cid = item.get("id", "")
-        if cid not in seen_constraints:
+        if cid and cid not in seen_constraints:
             result["constraints"].append(item)
             seen_constraints.add(cid)
     for item in builtin.get("anti_patterns", []):
         pid = item.get("id", "")
-        if pid not in seen_patterns:
+        if pid and pid not in seen_patterns:
             result["anti_patterns"].append(item)
             seen_patterns.add(pid)
 
-    # 2. community（覆盖 builtin）
     for item in community.get("traits", []):
         tid = item.get("id", "")
-        if tid in seen_traits:
-            _replace_in_list(result["traits"], "id", tid, item)
-        else:
-            result["traits"].append(item)
-            seen_traits.add(tid)
+        canon = alias_map.get(tid, tid)
+        if not tid or canon in seen_traits:
+            continue
+        remember_trait(item)
     for item in community.get("correlations", []):
-        key = pair_key(item)
+        key = _pair_key(item, alias_map)
         if key in seen_corrs:
-            _replace_in_list(result["correlations"], lambda x, k=key: pair_key(x) == k, True, item)
-        else:
-            result["correlations"].append(item)
-            seen_corrs.add(key)
+            continue
+        remember_corr(item)
     for item in community.get("constraints", []):
         cid = item.get("id", "")
+        if not cid or cid in seen_constraints:
+            continue
+        result["constraints"].append(item)
+        seen_constraints.add(cid)
+    for item in community.get("anti_patterns", []):
+        pid = item.get("id", "")
+        if not pid or pid in seen_patterns:
+            continue
+        result["anti_patterns"].append(item)
+        seen_patterns.add(pid)
+
+    for item in (user_traits or []):
+        tid = item.get("id", "")
+        canon = alias_map.get(tid, tid)
+        if not tid:
+            continue
+        if canon in seen_traits:
+            _replace_in_list(result["traits"], "id", canon, item)
+            alias_map[tid] = item.get("id") or canon
+        else:
+            remember_trait(item)
+    for item in (user_correlations or []):
+        key = _pair_key(item, alias_map)
+        if key in seen_corrs:
+            _replace_in_list(
+                result["correlations"],
+                lambda x, k=key: _pair_key(x) == k,
+                True,
+                item,
+            )
+        else:
+            remember_corr(item)
+    for item in (user_constraints or []):
+        cid = item.get("id", "")
+        if not cid:
+            continue
         if cid in seen_constraints:
             _replace_in_list(result["constraints"], "id", cid, item)
         else:
             result["constraints"].append(item)
             seen_constraints.add(cid)
-    for item in community.get("anti_patterns", []):
+    for item in (user_anti_patterns or []):
         pid = item.get("id", "")
+        if not pid:
+            continue
         if pid in seen_patterns:
             _replace_in_list(result["anti_patterns"], "id", pid, item)
         else:
             result["anti_patterns"].append(item)
             seen_patterns.add(pid)
-
-    # 3. user（最高优先级）
-    for item in (user_traits or []):
-        tid = item.get("id", "")
-        if tid in seen_traits:
-            _replace_in_list(result["traits"], "id", tid, item)
-        else:
-            result["traits"].append(item)
-            seen_traits.add(tid)
-    for item in (user_correlations or []):
-        key = pair_key(item)
-        if key in seen_corrs:
-            _replace_in_list(result["correlations"], lambda x, k=key: pair_key(x) == k, True, item)
-        else:
-            result["correlations"].append(item)
-            seen_corrs.add(key)
-    for item in (user_constraints or []):
-        cid = item.get("id", "")
-        if cid in seen_constraints:
-            _replace_in_list(result["constraints"], "id", cid, item)
-        else:
-            result["constraints"].append(item)
-    for item in (user_anti_patterns or []):
-        pid = item.get("id", "")
-        if pid in seen_patterns:
-            _replace_in_list(result["anti_patterns"], "id", pid, item)
-        else:
-            result["anti_patterns"].append(item)
 
     return result
 

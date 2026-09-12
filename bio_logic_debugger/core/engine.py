@@ -472,11 +472,13 @@ class BioLogicEngine:
             if intent in ("", "any"):
                 continue
             target = self._find_target(ctx.goal, tid)
+            if target is None:
+                continue
             trait = ctx.trait_map.get(tid)
             better = self._wants_high(target, trait)
             if intent == "better" and not better:
                 return False
-            if intent == "worse" and (target is None or better):
+            if intent == "worse" and better:
                 return False
         return True
 

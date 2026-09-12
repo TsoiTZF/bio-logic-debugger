@@ -5,6 +5,14 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.7] - 2026-09-12
+
+### Fixed
+- 社区合并改为只新增，过时社区条目不再覆盖内置约束/性状
+- 高产低质改为高产+高垩白+低整精米；垩白 higher_is_better=false
+- 其余反模式补 better/worse 意图，晚熟高产不再打成早熟陷阱
+- 补 Fukuoka 2009、Khanna 2015 的 DOI；对不上的仍空着
+
 ## [0.2.6] - 2026-09-12
 
 ### Fixed

@@ -44,14 +44,34 @@ def test_indica_quality_is_not_low_quality_trap():
     assert not any(p.id == "rice_high_yield_low_quality" for p in report.matched_anti_patterns)
 
 
-def test_high_yield_short_grain_low_amylose_hits_trap():
+def test_high_yield_high_chalk_low_milling_hits_trap():
     engine = _rice()
-    goal = BreedingGoal(name="高产短粒低直链")
+    goal = BreedingGoal(name="高产高垩白低整精米")
     goal.add_target(TraitTarget("rice_yield_per_mu", 800, ">="))
-    goal.add_target(TraitTarget("rice_grain_length", 4.5, "<="))
-    goal.add_target(TraitTarget("rice_amylose_content", 8, "<="))
+    goal.add_target(TraitTarget("rice_chalkiness", 25, ">="))
+    goal.add_target(TraitTarget("rice_head_rice_recovery", 42, "<="))
     report = engine.validate(goal)
     assert any(p.id == "rice_high_yield_low_quality" for p in report.matched_anti_patterns)
+
+
+def test_late_heading_high_yield_is_not_precocious_trap():
+    engine = _rice()
+    goal = BreedingGoal(name="晚熟高产")
+    goal.add_target(TraitTarget("rice_heading_days", 150, ">="))
+    goal.add_target(TraitTarget("rice_yield_per_plant", 50, ">="))
+    goal.add_target(TraitTarget("rice_biomass", 16, ">="))
+    report = engine.validate(goal)
+    assert not any(p.id == "rice_precocious_sacrifice" for p in report.matched_anti_patterns)
+
+
+def test_early_heading_high_yield_hits_precocious_trap():
+    engine = _rice()
+    goal = BreedingGoal(name="极早熟高产")
+    goal.add_target(TraitTarget("rice_heading_days", 70, "<="))
+    goal.add_target(TraitTarget("rice_yield_per_plant", 50, ">="))
+    goal.add_target(TraitTarget("rice_biomass", 16, ">="))
+    report = engine.validate(goal)
+    assert any(p.id == "rice_precocious_sacrifice" for p in report.matched_anti_patterns)
 
 
 def test_correlation_respects_confidence_weight():

@@ -23,18 +23,44 @@ def test_user_overrides_community_and_builtin():
     assert merged["traits"][0]["name"] == "用户"
 
 
-def test_community_overrides_builtin_when_no_user():
+def test_community_does_not_override_builtin():
     builtin = {
         "traits": [{"id": "t1", "name": "内置", "description": "", "category": "x"}],
+        "correlations": [],
+        "constraints": [{"id": "c1", "name": "内置约束", "severity": "FATAL"}],
+        "anti_patterns": [],
+    }
+    community = {
+        "traits": [{"id": "t1", "name": "过时社区", "description": "", "category": "x"}],
+        "correlations": [],
+        "constraints": [{"id": "c1", "name": "过时约束", "severity": "INFO"}],
+        "anti_patterns": [],
+    }
+    merged = merge_knowledge(builtin, community)
+    assert merged["traits"][0]["name"] == "内置"
+    assert merged["constraints"][0]["name"] == "内置约束"
+
+
+def test_community_adds_new_and_skips_alias():
+    builtin = {
+        "traits": [{
+            "id": "rice_yield_per_mu",
+            "name": "亩产",
+            "aliases": ["rice_yield_per_ha"],
+        }],
         "correlations": [],
         "constraints": [],
         "anti_patterns": [],
     }
     community = {
-        "traits": [{"id": "t1", "name": "社区", "description": "", "category": "x"}],
+        "traits": [
+            {"id": "rice_yield_per_ha", "name": "旧亩产"},
+            {"id": "new_trait", "name": "社区新性状"},
+        ],
         "correlations": [],
         "constraints": [],
         "anti_patterns": [],
     }
     merged = merge_knowledge(builtin, community)
-    assert merged["traits"][0]["name"] == "社区"
+    ids = [t["id"] for t in merged["traits"]]
+    assert ids == ["rice_yield_per_mu", "new_trait"]

@@ -66,7 +66,7 @@ pytest
 缓存写到用户目录 `~/.bio-logic-debugger/community/`，内置 JSON 不会被覆盖。
 
 - **社区仓库**：[TsoiTZF/bio-logic-knowledge](https://github.com/TsoiTZF/bio-logic-knowledge)
-- 合并优先级：**用户扩充 > 社区数据 > 内置兜底**
+- 合并：**用户可覆盖同 id**；**社区只新增**，过时社区条目不能改掉内置
 - 负相关/权衡在报告里最高为警告，不是「生理不可能」
 
 ## 项目结构

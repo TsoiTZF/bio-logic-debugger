@@ -5,8 +5,8 @@
     "description": "追求单一产量指标突破的情况下，品质性状（粒型、食味）往往会系统性下降。过去三十年中国优质稻育种的经验表明，在不引入特殊种质资源的条件下，亩产超过 800kg 的品种鲜有达到国标一级优质米的案例。",
     "trigger_traits": [
       "rice_yield_per_mu",
-      "rice_grain_length",
-      "rice_amylose_content"
+      "rice_chalkiness",
+      "rice_head_rice_recovery"
     ],
     "severity": "SEVERE",
     "historical_examples": [
@@ -86,8 +86,8 @@
     ],
     "trigger_intents": {
       "rice_yield_per_mu": "better",
-      "rice_grain_length": "worse",
-      "rice_amylose_content": "worse"
+      "rice_chalkiness": "worse",
+      "rice_head_rice_recovery": "worse"
     }
   },
   {
@@ -158,7 +158,13 @@
         "url": "",
         "year": 0
       }
-    ]
+    ],
+    "trigger_intents": {
+      "rice_grain_length": "better",
+      "rice_grain_width": "better",
+      "rice_1000_grain_weight": "better",
+      "rice_chalkiness": "worse"
+    }
   },
   {
     "id": "rice_semi_dwarf_extreme",
@@ -218,7 +224,13 @@
         "url": "",
         "year": 0
       }
-    ]
+    ],
+    "trigger_intents": {
+      "rice_plant_height": "worse",
+      "rice_yield_per_plant": "better",
+      "rice_lodging_resistance": "better",
+      "rice_harvest_index": "better"
+    }
   },
   {
     "id": "rice_precocious_sacrifice",
@@ -269,7 +281,12 @@
         "url": "",
         "year": 0
       }
-    ]
+    ],
+    "trigger_intents": {
+      "rice_heading_days": "worse",
+      "rice_yield_per_plant": "better",
+      "rice_biomass": "better"
+    }
   },
   {
     "id": "rice_total_disease_resistance",
@@ -319,17 +336,22 @@
         "level": "STRONG",
         "source": "Khanna et al., 2015",
         "description": "抗病基因堆叠的产量代价",
-        "url": "",
+        "url": "https://doi.org/10.5958/0975-6906.2015.00068.1",
         "year": 2015
       },
       {
         "level": "STRONG",
         "source": "Fukuoka et al., 2009",
         "description": "pi21 定量抗性研究",
-        "url": "",
+        "url": "https://doi.org/10.1126/science.1175550",
         "year": 2009
       }
-    ]
+    ],
+    "trigger_intents": {
+      "rice_blast_resistance": "better",
+      "rice_bacterial_blight_res": "better",
+      "rice_yield_per_plant": "better"
+    }
   },
   {
     "id": "rice_drought_yield_tradeoff",
@@ -399,7 +421,12 @@
         "url": "https://doi.org/10.1038/ng.2725",
         "year": 2013
       }
-    ]
+    ],
+    "trigger_intents": {
+      "rice_drought_tolerance": "better",
+      "rice_yield_per_plant": "better",
+      "rice_root_depth": "better"
+    }
   },
   {
     "id": "rice_chalkiness_quality",
@@ -460,6 +487,11 @@
         "url": "",
         "year": 0
       }
-    ]
+    ],
+    "trigger_intents": {
+      "rice_chalkiness": "worse",
+      "rice_head_rice_recovery": "better",
+      "rice_1000_grain_weight": "better"
+    }
   }
 ]
