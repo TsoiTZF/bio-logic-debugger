@@ -12,9 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import time
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Optional
 
@@ -457,12 +455,23 @@ def merge_knowledge(
 
     for item in (user_traits or []):
         tid = item.get("id", "")
-        canon = alias_map.get(tid, tid)
         if not tid:
             continue
+        canon = alias_map.get(tid, tid)
         if canon in seen_traits:
-            _replace_in_list(result["traits"], "id", canon, item)
-            alias_map[tid] = item.get("id") or canon
+            stored = dict(item)
+            if canon != tid:
+                stored["id"] = canon
+                aliases = list(stored.get("aliases") or [])
+                if tid not in aliases:
+                    aliases.append(tid)
+                stored["aliases"] = aliases
+            _replace_in_list(result["traits"], "id", canon, stored)
+            alias_map[tid] = canon
+            alias_map[canon] = canon
+            for alias in stored.get("aliases") or []:
+                if alias:
+                    alias_map[alias] = canon
         else:
             remember_trait(item)
     for item in (user_correlations or []):
@@ -503,7 +512,10 @@ def _replace_in_list(lst: list, key: str | callable, value: Any, new_item: dict)
     if callable(key):
         pred = key
     else:
-        pred = lambda x: x.get(key) == value
+        field_name = key
+
+        def pred(x, field=field_name, expected=value):
+            return x.get(field) == expected
     for i, item in enumerate(lst):
         if pred(item):
             lst[i] = new_item

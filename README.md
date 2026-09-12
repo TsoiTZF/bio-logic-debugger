@@ -6,31 +6,16 @@ Bio-Logic Debugger 是一个育种目标预筛引擎。它用已知的生物学�
 
 ## 快速开始
 
-### 1. 安装依赖
-
 ```bash
-pip install -r requirements.txt
+pip install -e .
+bld            # 命令行（pyproject 里已定义 bld = cli:main）
+streamlit run bio_logic_debugger/app.py
 ```
 
-### 2. 启动 Web 界面
+浏览器打开 `http://localhost:8501`。单次验证：
 
 ```bash
-cd bio_logic_debugger
-streamlit run app.py
-```
-
-浏览器打开 `http://localhost:8501` 即可使用。
-
-### 3. 或者用命令行
-
-```bash
-python cli.py
-```
-
-进入交互式控制台，或单次快速验证：
-
-```bash
-python -m bio_logic_debugger.cli --validate rice_yield_per_plant >= 50
+bld --validate rice_yield_per_plant >= 50
 ```
 
 跑测试：
@@ -45,7 +30,7 @@ pytest
 - **🎯 育种目标验证** — 设定目标性状，系统检查拮抗关系、生理约束和反模式
 - **🔬 性状浏览器** — 浏览知识库中的所有性状及其关联网络
 - **📚 反模式库** — 历史上反复验证的育种死胡同，附带失败案例和替代方向
-- **📜 约束规则** — 普适的生理学法则（FATAL 级违反 = 生理上不可能）
+- **📜 约束规则** — FATAL 生理极限；SEVERE 极难突破；WARNING 已知冲突，可能缓解
 - **📚 文献与知识库** — 上传论文 PDF / 搜索 DOI 提取知识；社区库需手动同步
 
 ## 新增功能
@@ -87,7 +72,6 @@ bio_logic_debugger/
 │   ├── paper_analyzer.py     # 论文分析编排器
 │   ├── pdf_parser.py         # PDF 文本提取
 │   ├── doi_fetcher.py        # DOI/标题检索
-│   └── data/                 # 社区知识库本地缓存
 └── llm/
     └── reasoner.py           # LLM 深度分析（可选，含 Vision）
 ```
@@ -95,7 +79,7 @@ bio_logic_debugger/
 ## 内置知识库
 
 内置知识在 `bio_logic_debugger/knowledge/builtin/*.json`（随包分发）。
-`data/` 只存放社区同步缓存，不会覆盖内置文件。
+社区同步缓存写在用户目录 `~/.bio-logic-debugger/community/`，不进软件包。
 
 目前以 **水稻 (Oryza sativa)** 作为示例知识库，覆盖：
 

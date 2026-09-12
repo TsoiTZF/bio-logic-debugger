@@ -234,6 +234,12 @@ def render(engine: BioLogicEngine) -> None:
                     extract_model = st.text_input(
                         "模型名", key="_extract_model", placeholder="deepseek-chat",
                     )
+            raw_len = len(st.session_state.paper_raw_text)
+            if raw_len > 6000:
+                st.info(
+                    f"正文约 {raw_len} 字。启用 LLM 时会按约 6000 字分块送入，"
+                    "不再只取前 8000 字。"
+                )
             analyze_btn = st.button("🚀 开始分析", type="primary", use_container_width=True)
 
             if analyze_btn:
@@ -276,9 +282,9 @@ def render(engine: BioLogicEngine) -> None:
                 with st.expander(f"{cat_label}（{len(cat_items)} 条）", expanded=True):
                     for idx, item in enumerate(cat_items):
                         item_key = f"{cat_key}_{idx}"
+                        label = item.data.get("name") or item.data.get("trait_a", "未知")
                         checked = st.checkbox(
-                            f"**{item.data.get('name') or item.data.get('trait_a', '未知')}**　"
-                            f"<span style='color:#888;font-size:0.8em;'>置信度 {item.confidence:.0%}</span>",
+                            f"{label}  置信度 {item.confidence:.0%}",
                             value=item.selected,
                             key=f"select_{item_key}",
                         )
@@ -300,12 +306,9 @@ def render(engine: BioLogicEngine) -> None:
                                 f"范围：{item.data['range']} {item.data.get('unit', '')}"
                             )
                         if item.source_sentence:
-                            detail_parts.append(
-                                f"<span style='color:#999;font-style:italic;'>"
-                                f"原文：{item.source_sentence[:100]}</span>"
-                            )
+                            detail_parts.append(f"原文：{item.source_sentence[:100]}")
                         if detail_parts:
-                            st.markdown("<br>".join(detail_parts), unsafe_allow_html=True)
+                            st.markdown("\n\n".join(detail_parts))
                         st.markdown("---")
 
             # 导入按钮

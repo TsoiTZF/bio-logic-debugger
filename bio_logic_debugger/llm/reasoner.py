@@ -15,8 +15,8 @@ import base64
 import json
 import logging
 import os
-from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from dataclasses import dataclass
+from typing import Callable
 
 from bio_logic_debugger.core.domain import BreedingGoal
 from bio_logic_debugger.core.engine import BioLogicEngine, ValidationContext

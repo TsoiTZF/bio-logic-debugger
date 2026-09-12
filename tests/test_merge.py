@@ -41,6 +41,33 @@ def test_community_does_not_override_builtin():
     assert merged["constraints"][0]["name"] == "内置约束"
 
 
+def test_user_alias_id_rewrites_to_canonical():
+    builtin = {
+        "traits": [{
+            "id": "rice_yield_per_mu",
+            "name": "亩产",
+            "aliases": ["rice_yield_per_ha"],
+        }],
+        "correlations": [{
+            "trait_a": "rice_yield_per_mu",
+            "trait_b": "rice_plant_height",
+            "corr_type": "NEGATIVE",
+            "strength": -0.4,
+        }],
+        "constraints": [],
+        "anti_patterns": [],
+    }
+    merged = merge_knowledge(
+        builtin,
+        {"traits": [], "correlations": [], "constraints": [], "anti_patterns": []},
+        user_traits=[{"id": "rice_yield_per_ha", "name": "用户亩产"}],
+    )
+    assert merged["traits"][0]["id"] == "rice_yield_per_mu"
+    assert merged["traits"][0]["name"] == "用户亩产"
+    assert "rice_yield_per_ha" in merged["traits"][0]["aliases"]
+    assert merged["correlations"][0]["trait_a"] == "rice_yield_per_mu"
+
+
 def test_community_adds_new_and_skips_alias():
     builtin = {
         "traits": [{

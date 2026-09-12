@@ -17,24 +17,23 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
+from .anti_pattern import AntiPatternMatcher
 from .domain import (
     AntiPattern,
     BiologicalConstraint,
     BreedingGoal,
     ConstraintSeverity,
-    ConstraintScope,
     CorrelationType,
-    EvidenceLevel,
     Trait,
     TraitCorrelation,
     TraitTarget,
     ValidationReport,
     Violation,
 )
-from .anti_pattern import AntiPatternMatcher
 from .expr import Binding, ExprError, binding_from_target, parse, referenced_ids, try_evaluate
 
 logger = logging.getLogger(__name__)
+_UNSET = object()
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -152,8 +151,37 @@ class BioLogicEngine:
             self._layers.insert(index, layer)
 
     def set_llm_callback(self, callback: Callable | None) -> None:
-        """设置 LLM 推理回调；传 None 关闭。"""
+        """设置 LLM 推理回调；传 None 关闭。界面验证应走 validate(llm_layer=...)。"""
         self._llm_callback = callback
+
+    def set_confidence(self, entity_type: str, entity_id: str, value: float) -> bool:
+        """按类型和 id 改置信度。关联 id 为排序后的 a__b。"""
+        value = float(value)
+        kind = entity_type.rstrip("s")
+        if kind == "trait":
+            trait = self.get_trait(entity_id)
+            if trait is None:
+                return False
+            trait.confidence = value
+            return True
+        if kind == "correlation":
+            parts = entity_id.split("__")
+            if len(parts) != 2:
+                return False
+            a = self.canonical_id(parts[0])
+            b = self.canonical_id(parts[1])
+            for corr in self._correlations:
+                if {corr.trait_a, corr.trait_b} == {a, b}:
+                    corr.confidence = value
+                    return True
+            return False
+        if kind == "constraint":
+            for constraint in self._constraints:
+                if constraint.id == entity_id:
+                    constraint.confidence = value
+                    return True
+            return False
+        return False
 
     def get_trait(self, trait_id: str) -> Optional[Trait]:
         return self._traits.get(self.canonical_id(trait_id))
@@ -178,7 +206,7 @@ class BioLogicEngine:
 
     # -------- 验证管线 --------
 
-    def validate(self, goal: BreedingGoal) -> ValidationReport:
+    def validate(self, goal: BreedingGoal, llm_layer: Any = _UNSET) -> ValidationReport:
         """
         执行完整的验证管线。
 
@@ -202,9 +230,10 @@ class BioLogicEngine:
         for layer in self._layers:
             ctx = layer(ctx)
 
-        if self._llm_callback:
+        callback = self._llm_callback if llm_layer is _UNSET else llm_layer
+        if callback:
             try:
-                ctx = self._llm_callback(ctx)
+                ctx = callback(ctx)
             except Exception as e:
                 logger.warning(f"LLM 推理失败: {e}")
                 ctx.llm_comment = f"[LLM 推理异常: {e}]"
@@ -315,8 +344,8 @@ class BioLogicEngine:
                         narrative_parts.append(f"\n\n背后的生理机制：{corr.mechanism}")
 
                     narrative_parts.append(
-                        f"\n\n同时追求两者走高时，一方的提升可能被另一方拖累。"
-                        f"这是统计关联，不是「生理上不可能」。"
+                        "\n\n同时追求两者走高时，一方的提升可能被另一方拖累。"
+                        "这是统计关联，不是「生理上不可能」。"
                     )
 
                     ctx.violations.append(Violation(
@@ -331,11 +360,54 @@ class BioLogicEngine:
                         narrative="".join(narrative_parts),
                         involved_traits=[corr.trait_a, corr.trait_b],
                         suggestion=(
-                            f"建议：如果可能，尝试降低其中之一的目标值。"
-                            f"或者寻找是否存在打破该连锁的特殊种质资源。"
+                            "建议：如果可能，尝试降低其中之一的目标值。"
+                            "或者寻找是否存在打破该连锁的特殊种质资源。"
                         ),
                         source="rule",
                     ))
+
+            elif corr.corr_type == CorrelationType.POSITIVE:
+                trait_a = ctx.trait_map.get(corr.trait_a)
+                trait_b = ctx.trait_map.get(corr.trait_b)
+                better_a = self._wants_high(target_a, trait_a)
+                better_b = self._wants_high(target_b, trait_b)
+                chasing_a = self._is_chasing(target_a)
+                chasing_b = self._is_chasing(target_b)
+                if not chasing_a or not chasing_b:
+                    continue
+                effective = abs(corr.strength) * corr.confidence
+                if effective < 0.2:
+                    continue
+                same_way = better_a == better_b
+                if same_way:
+                    title = f"正相关联动：{tname_a} ↔ {tname_b}"
+                    narrative = (
+                        f"「{tname_a}」和「{tname_b}」正相关"
+                        f"（r = {corr.strength:.2f}，有效强度 {effective:.2f}）。"
+                        f"两边同向追极端时，一方会带动另一方，风险会一起放大。"
+                    )
+                    suggestion = "同向加压前先看哪一侧先碰到生理上限。"
+                else:
+                    title = f"正相关顺风：{tname_a} ↔ {tname_b}"
+                    narrative = (
+                        f"「{tname_a}」和「{tname_b}」正相关"
+                        f"（r = {corr.strength:.2f}，有效强度 {effective:.2f}）。"
+                        f"一边追优、一边追劣时，这条关联是顺风，不是拮抗。"
+                    )
+                    suggestion = "可把这条当作协同，不必按权衡去拆目标。"
+                ctx.violations.append(Violation(
+                    constraint_id=f"corr_pos.{corr.trait_a}.{corr.trait_b}",
+                    severity=ConstraintSeverity.INFO,
+                    title=title,
+                    description=(
+                        f"'{tname_a}' 与 '{tname_b}' 正相关，强度 {corr.strength:.2f}"
+                    ),
+                    mechanism=corr.mechanism or "未知机制",
+                    narrative=narrative,
+                    involved_traits=[corr.trait_a, corr.trait_b],
+                    suggestion=suggestion,
+                    source="rule",
+                ))
 
             elif corr.corr_type == CorrelationType.CURVILINEAR:
                 # 曲线关系：存在最优区间，过高或过低都不好
@@ -343,7 +415,7 @@ class BioLogicEngine:
                     constraint_id=f"corr_curve.{corr.trait_a}.{corr.trait_b}",
                     severity=ConstraintSeverity.INFO,
                     title=f"曲线关系提示：{tname_a} 与 {tname_b}",
-                    description=f"两者之间存在曲线相关，存在最优配比区间",
+                    description="两者之间存在曲线相关，存在最优配比区间",
                     mechanism=corr.mechanism or "未知机制",
                     narrative=(
                         f"「{tname_a}」和「{tname_b}」之间不是简单的线性关系，"
@@ -491,6 +563,12 @@ class BioLogicEngine:
     def _trait_name(self, trait_id: str) -> str:
         trait = self._traits.get(trait_id)
         return trait.name if trait else trait_id
+
+    @staticmethod
+    def _is_chasing(target: Optional[TraitTarget]) -> bool:
+        if target is None or target.desired_value is None:
+            return False
+        return target.direction in (">=", ">", "<=", "<")
 
     @staticmethod
     def _wants_high(target: Optional[TraitTarget], trait: Optional[Trait] = None) -> bool:

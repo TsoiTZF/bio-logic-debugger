@@ -74,6 +74,34 @@ def test_early_heading_high_yield_hits_precocious_trap():
     assert any(p.id == "rice_precocious_sacrifice" for p in report.matched_anti_patterns)
 
 
+def test_positive_correlation_tailwind_and_coupling():
+    engine = BioLogicEngine()
+    engine.register_traits([
+        Trait("a", "A", "", "产量", "g", (0.0, 100.0)),
+        Trait("b", "B", "", "品质", "%", (0.0, 100.0)),
+    ])
+    engine.register_correlation(TraitCorrelation(
+        trait_a="a", trait_b="b",
+        corr_type=CorrelationType.POSITIVE,
+        strength=0.6, confidence=1.0,
+        mechanism="测试正相关",
+    ))
+    both = BreedingGoal(name="同向")
+    both.add_target(TraitTarget("a", 80, ">="))
+    both.add_target(TraitTarget("b", 80, ">="))
+    report = engine.validate(both)
+    hits = [v for v in report.violations if v.constraint_id.startswith("corr_pos.")]
+    assert hits and hits[0].severity == ConstraintSeverity.INFO
+    assert "联动" in hits[0].title
+
+    mixed = BreedingGoal(name="一优一劣")
+    mixed.add_target(TraitTarget("a", 80, ">="))
+    mixed.add_target(TraitTarget("b", 20, "<="))
+    report = engine.validate(mixed)
+    hits = [v for v in report.violations if v.constraint_id.startswith("corr_pos.")]
+    assert hits and "顺风" in hits[0].title
+
+
 def test_correlation_respects_confidence_weight():
     engine = BioLogicEngine()
     engine.register_traits([

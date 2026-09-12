@@ -5,6 +5,19 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.8] - 2026-09-12
+
+### Fixed
+- 快速开始改为 `pip install -e .` / `bld` / `streamlit run bio_logic_debugger/app.py`
+- 约束页按 FATAL/SEVERE/WARNING 分档，不再一律「生理上不可能」
+- 停止打包和跟踪 `knowledge/data/`
+- 引擎兜底不再二次 import 损坏的模块级 JSON
+- 界面验证用 `validate(llm_layer=...)`，权重走 `set_confidence`
+- 用户用旧别名覆盖时改写为规范 id
+- 正相关输出顺风/联动 INFO
+- 早熟、收获指数降 SEVERE，干旱产量损失降 WARNING
+- 文献提取默认不勾选、分块送 LLM、去掉 HTML 原文渲染
+
 ## [0.2.7] - 2026-09-12
 
 ### Fixed

@@ -8,7 +8,9 @@ from bio_logic_debugger.core.engine import BioLogicEngine
 
 def render(engine: BioLogicEngine) -> None:
     st.title("📜 生物学约束规则")
-    st.markdown("生理学法则——违反这些约束意味着生理上不可能。")
+    st.markdown(
+        "FATAL：生理极限。SEVERE：极难突破。WARNING：已知冲突，可能缓解。"
+    )
     tag_map = {
         ConstraintSeverity.FATAL: ("🔴", "致命"),
         ConstraintSeverity.SEVERE: ("🟠", "严重"),

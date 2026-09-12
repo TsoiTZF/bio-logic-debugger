@@ -72,8 +72,8 @@
   {
     "id": "rice_extreme_precocity",
     "name": "极端早熟的生育期下限",
-    "description": "籼稻抽穗天数低于 65 天或粳稻低于 70 天时，基本营养生长期不足，无法形成足够的分蘖和叶片。",
-    "severity": "FATAL",
+    "description": "抽穗天数低于 65 天时基本营养生长期不足。籼/粳临界略有差别，本条用统一阈值，故不定 FATAL。",
+    "severity": "SEVERE",
     "scope": "SUBSPECIES",
     "species": "水稻",
     "condition_expr": "$rice_heading_days < 65",
@@ -103,8 +103,8 @@
   {
     "id": "rice_harvest_index_ceiling",
     "name": "收获指数的生物学上限",
-    "description": "水稻收获指数不可能超过 0.65。超过此值意味着茎鞘和叶片生物量不足，无法支撑正常的光合作用和物质转运。",
-    "severity": "FATAL",
+    "description": "收获指数超过 0.65 接近理论上限，茎鞘叶片生物量很难支撑。证据不足以下 FATAL。",
+    "severity": "SEVERE",
     "scope": "SPECIES",
     "species": "水稻",
     "condition_expr": "$rice_harvest_index > 0.65",
@@ -203,8 +203,8 @@
   {
     "id": "rice_drought_severe_yield_loss",
     "name": "严重干旱的产量损失下限",
-    "description": "严重干旱下，即使 SES 耐旱达 1–3 级（高抗），产量损失也很难低于约 30%。",
-    "severity": "FATAL",
+    "description": "严重干旱下，即使 SES 耐旱达 1–3 级，产量也常明显下降。表达式未绑定产量目标，故只作警告。",
+    "severity": "WARNING",
     "scope": "SPECIES",
     "species": "水稻",
     "condition_expr": "$rice_drought_tolerance <= 3 AND $drought_severity = 'severe'",

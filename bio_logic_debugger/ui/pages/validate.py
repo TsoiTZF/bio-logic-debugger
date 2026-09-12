@@ -128,6 +128,7 @@ def render(engine: BioLogicEngine) -> None:
                         direction=tgt["direction"],
                         priority=tgt["priority"],
                     ))
+                llm_layer = None
                 if llm_enabled:
                     from bio_logic_debugger.llm.reasoner import LLMConfig, LLMReasoner
                     reasoner = LLMReasoner(config=LLMConfig.from_ui(
@@ -135,11 +136,11 @@ def render(engine: BioLogicEngine) -> None:
                         base_url=base_url,
                         model=model,
                     ))
-                    engine.set_llm_callback(reasoner.as_validation_layer(engine))
-                else:
-                    engine.set_llm_callback(None)
+                    llm_layer = reasoner.as_validation_layer(engine)
                 with st.spinner("验证中..."):
-                    st.session_state.last_report = engine.validate(goal)
+                    st.session_state.last_report = engine.validate(
+                        goal, llm_layer=llm_layer,
+                    )
                 st.rerun()
 
     with col_right:
@@ -178,11 +179,7 @@ def render(engine: BioLogicEngine) -> None:
                 ConstraintSeverity.INFO: ("🔵", "提示", "#339af0"),
             }
             for v in sorted(report.violations, key=lambda x: severity_order.get(x.severity, 99)):
-                icon, tag, color = tag_map.get(v.severity, ("⚪", "未知", "#888"))
-                badge = (
-                    f"<span style='background:{color};color:white;padding:1px 8px;"
-                    f"border-radius:10px;font-size:0.75em;'>{tag}</span>"
-                )
+                icon, tag, _color = tag_map.get(v.severity, ("⚪", "未知", "#888"))
                 expanded = v.severity in (ConstraintSeverity.FATAL, ConstraintSeverity.SEVERE)
                 with st.expander(f"{icon} [{tag}] {v.title}", expanded=expanded):
                     st.markdown(v.description)

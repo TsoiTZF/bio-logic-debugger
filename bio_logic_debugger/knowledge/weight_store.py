@@ -11,7 +11,6 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Optional
 
 from bio_logic_debugger.core.engine import BioLogicEngine
 from bio_logic_debugger.paths import user_data_dir
@@ -113,33 +112,16 @@ def apply_weights_to_engine(engine: BioLogicEngine) -> int:
     weights = load_weights()
     updated = 0
 
-    # 应用性状权重
-    trait_weights = weights.get("traits", {})
-    for tid, trait in engine._traits.items():
-        if tid in trait_weights:
-            trait.confidence = trait_weights[tid]
+    for tid, value in weights.get("traits", {}).items():
+        if engine.set_confidence("traits", tid, value):
             updated += 1
-
-    # 应用关联权重
-    corr_weights = weights.get("correlations", {})
-    for corr in engine._correlations:
-        key = _corr_key(corr.trait_a, corr.trait_b)
-        if key in corr_weights:
-            corr.confidence = corr_weights[key]
+    for key, value in weights.get("correlations", {}).items():
+        if engine.set_confidence("correlations", key, value):
             updated += 1
-
-    # 应用约束权重
-    cstr_weights = weights.get("constraints", {})
-    for cstr in engine._constraints:
-        if cstr.id in cstr_weights:
-            cstr.confidence = cstr_weights[cstr.id]
+    for cid, value in weights.get("constraints", {}).items():
+        if engine.set_confidence("constraints", cid, value):
             updated += 1
 
     if updated:
         logger.info(f"已应用 {updated} 条用户权重到引擎")
     return updated
-
-
-def _corr_key(trait_a: str, trait_b: str) -> str:
-    """生成关联的唯一 key（排序无关）"""
-    return f"{trait_a}__{trait_b}" if trait_a < trait_b else f"{trait_b}__{trait_a}"

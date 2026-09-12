@@ -1,6 +1,6 @@
 [project]
 name = "bio-logic-debugger"
-version = "0.2.7"
+version = "0.2.8"
 description = "让邺城燃烧 - 育种目标生物逻辑验证工具"
 authors = [
     {name = "TsoiTZF"}
@@ -18,6 +18,7 @@ dependencies = [
 dev = [
     "pytest>=7.0.0",
     "black>=23.0.0",
+    "ruff>=0.6.0",
 ]
 
 [project.scripts]
@@ -31,11 +32,19 @@ build-backend = "setuptools.build_meta"
 include = ["bio_logic_debugger*"]
 
 [tool.setuptools.package-data]
-bio_logic_debugger = ["knowledge/data/*.json", "knowledge/builtin/*.json"]
+bio_logic_debugger = ["knowledge/builtin/*.json"]
 
 [tool.black]
 line-length = 100
 target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

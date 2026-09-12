@@ -8,3 +8,4 @@ venv/
 *.egg-info/
 dist/
 build/
+bio_logic_debugger/knowledge/data/

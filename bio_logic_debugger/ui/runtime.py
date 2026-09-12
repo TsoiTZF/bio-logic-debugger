@@ -20,17 +20,16 @@ def get_engine() -> BioLogicEngine:
         engine.register_constraints(constraints)
         engine.register_anti_patterns(anti_patterns)
     except Exception as e:
-        from bio_logic_debugger.knowledge.rice_knowledge import (
-            ANTI_PATTERNS as BUILTIN_AP,
-            CONSTRAINTS as BUILTIN_CONS,
-            CORRELATIONS as BUILTIN_CORRS,
-            TRAITS as BUILTIN_TRAITS,
-        )
-        engine.register_traits(BUILTIN_TRAITS)
-        engine.register_correlations(BUILTIN_CORRS)
-        engine.register_constraints(BUILTIN_CONS)
-        engine.register_anti_patterns(BUILTIN_AP)
-        st.warning(f"知识库合并失败，使用内置兜底: {e}")
+        try:
+            from bio_logic_debugger.knowledge.knowledge_store import load_builtin_objects
+            traits, correlations, constraints, anti_patterns = load_builtin_objects()
+            engine.register_traits(traits)
+            engine.register_correlations(correlations)
+            engine.register_constraints(constraints)
+            engine.register_anti_patterns(anti_patterns)
+            st.warning(f"知识库合并失败，使用内置兜底: {e}")
+        except Exception as e2:
+            st.error(f"内置知识也无法加载: {e2}")
     try:
         apply_weights_to_engine(engine)
     except Exception:

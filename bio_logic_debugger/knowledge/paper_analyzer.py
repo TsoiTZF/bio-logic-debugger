@@ -13,8 +13,8 @@ from __future__ import annotations
 import json
 import logging
 import re
-from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from dataclasses import dataclass
+from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class ExtractedItem:
     data: dict                         # 对应的数据字段
     confidence: float = 0.5            # 置信度 0-1
     source_sentence: str = ""          # 原文证据
-    selected: bool = True              # 用户是否勾选
+    selected: bool = False             # 默认不入库，需用户勾选
 
     def __hash__(self):
         return hash((self.item_type, json.dumps(self.data, sort_keys=True, ensure_ascii=False)))
@@ -63,12 +63,28 @@ EXTRACT_SYSTEM_PROMPT = """你是一位作物育种知识提取专家。从以�
 - 如果没有相关信息，对应字段返回空列表 []"""
 
 
+CHUNK_SIZE = 6000
+CHUNK_OVERLAP = 400
+
+
+def _chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
+    if len(text) <= size:
+        return [text]
+    chunks: list[str] = []
+    i = 0
+    n = len(text)
+    while i < n:
+        chunks.append(text[i:i + size])
+        if i + size >= n:
+            break
+        i += size - overlap
+    return chunks
+
+
 def _build_extract_prompt(text: str) -> str:
     """构建知识提取提示词"""
-    # 取文本前 8000 字符（LLM 上下文限制）
-    truncated = text[:8000]
     return f"""论文片段：
-{truncated}
+{text}
 
 请提取其中的育种相关知识，以 JSON 格式输出：
 {{
@@ -120,18 +136,22 @@ def _rule_extract(text: str) -> list[ExtractedItem]:
             seen_sentences.add(s)
             items.append(item)
 
-    # 1. 提取数值范围 → 推测性状
+    # 1. 提取数值范围：附近必须有性状名，否则不生成「未知性状」
     for match in PATTERN_RANGE.finditer(text):
         lo, hi, unit = match.groups()
+        window = text[max(0, match.start() - 40):match.end() + 8]
+        name_hit = PATTERN_TRAIT_NAME.search(window)
+        if not name_hit:
+            continue
         _add(ExtractedItem(
             item_type="trait",
             data={
-                "name": f"未知性状（{unit}）",
+                "name": name_hit.group(1),
                 "range": [float(lo), float(hi)],
                 "unit": unit,
                 "category": "未知",
             },
-            confidence=0.3,
+            confidence=0.45,
             source_sentence=match.group(0),
         ))
 
@@ -197,34 +217,18 @@ def _rule_extract(text: str) -> list[ExtractedItem]:
     return items
 
 
-def _llm_extract(text: str, llm_caller: Callable) -> list[ExtractedItem]:
-    """调用 LLM 提取知识。llm_caller(system_prompt, user_prompt) -> str。"""
-    if not llm_caller:
-        return []
+def _parse_llm_json(result_text: str) -> dict:
+    cleaned = (result_text or "").strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[1]
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        cleaned = cleaned.strip()
+    return json.loads(cleaned)
 
-    try:
-        result_text = llm_caller(EXTRACT_SYSTEM_PROMPT, _build_extract_prompt(text))
-    except Exception as e:
-        logger.warning(f"LLM 提取失败: {e}")
-        return []
 
-    # 解析 JSON 结果
-    try:
-        # 清理可能存在的 markdown 代码块标记
-        cleaned = result_text.strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("\n", 1)[1]
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3]
-            cleaned = cleaned.strip()
-
-        data = json.loads(cleaned)
-    except (json.JSONDecodeError, Exception) as e:
-        logger.warning(f"LLM 返回无法解析的 JSON: {e}")
-        return []
-
+def _items_from_llm_data(data: dict) -> list[ExtractedItem]:
     items: list[ExtractedItem] = []
-
     for t in data.get("traits", []):
         r = t.get("range", [None, None])
         items.append(ExtractedItem(
@@ -238,7 +242,6 @@ def _llm_extract(text: str, llm_caller: Callable) -> list[ExtractedItem]:
             confidence=0.7,
             source_sentence=json.dumps(t, ensure_ascii=False),
         ))
-
     for c in data.get("correlations", []):
         items.append(ExtractedItem(
             item_type="correlation",
@@ -252,7 +255,6 @@ def _llm_extract(text: str, llm_caller: Callable) -> list[ExtractedItem]:
             confidence=0.7,
             source_sentence=json.dumps(c, ensure_ascii=False),
         ))
-
     for c in data.get("constraints", []):
         items.append(ExtractedItem(
             item_type="constraint",
@@ -265,7 +267,26 @@ def _llm_extract(text: str, llm_caller: Callable) -> list[ExtractedItem]:
             confidence=0.65,
             source_sentence=json.dumps(c, ensure_ascii=False),
         ))
+    return items
 
+
+def _llm_extract(text: str, llm_caller: Callable) -> list[ExtractedItem]:
+    """调用 LLM 提取知识。长文本按块送，避免只取前 8000 字。"""
+    if not llm_caller:
+        return []
+    items: list[ExtractedItem] = []
+    for chunk in _chunk_text(text):
+        try:
+            result_text = llm_caller(EXTRACT_SYSTEM_PROMPT, _build_extract_prompt(chunk))
+        except Exception as e:
+            logger.warning(f"LLM 提取失败: {e}")
+            continue
+        try:
+            data = _parse_llm_json(result_text)
+        except (json.JSONDecodeError, TypeError, ValueError) as e:
+            logger.warning(f"LLM 返回无法解析的 JSON: {e}")
+            continue
+        items.extend(_items_from_llm_data(data))
     return items
 
 
@@ -336,8 +357,10 @@ def items_to_traits(items: list[ExtractedItem], known_traits: list | None = None
         name = item.data.get("name", "")
         if not name or name in seen_names:
             continue
-        seen_names.add(name)
         tid = name_to_id(name, known_traits)
+        if not tid:
+            continue
+        seen_names.add(name)
         r = item.data.get("range", [None, None])
         results.append({
             "id": tid,
@@ -363,6 +386,10 @@ def items_to_correlations(items: list[ExtractedItem], known_traits: list | None 
         tb = item.data.get("trait_b", "")
         if not ta or not tb:
             continue
+        id_a = name_to_id(ta, known_traits)
+        id_b = name_to_id(tb, known_traits)
+        if not id_a or not id_b:
+            continue
         key = (ta, tb)
         if key in seen:
             continue
@@ -374,8 +401,8 @@ def items_to_correlations(items: list[ExtractedItem], known_traits: list | None 
             "curvilinear": "CURVILINEAR",
         }
         results.append({
-            "trait_a": name_to_id(ta, known_traits),
-            "trait_b": name_to_id(tb, known_traits),
+            "trait_a": id_a,
+            "trait_b": id_b,
             "corr_type": corr_type_map.get(item.data.get("type", ""), "POSITIVE"),
             "strength": item.data.get("strength", 0.0),
             "confidence": item.confidence,
@@ -396,9 +423,12 @@ def items_to_constraints(items: list[ExtractedItem], known_traits: list | None =
         name = item.data.get("name", "")
         if not name or name in seen:
             continue
+        cid = name_to_id(name, None)
+        if not cid:
+            continue
         seen.add(name)
         results.append({
-            "id": name_to_id(name, known_traits),
+            "id": cid,
             "name": name,
             "description": item.data.get("description", ""),
             "severity": item.data.get("severity", "WARNING"),
@@ -412,22 +442,35 @@ def items_to_constraints(items: list[ExtractedItem], known_traits: list | None =
     return results
 
 
-def name_to_id(name: str, known_traits: list | None = None) -> str:
-    """将名称映射到已有性状 id；匹配不到再生成 extracted_ 前缀。"""
+def name_to_id(name: str, known_traits: list | None = None) -> str | None:
+    """精确或足够长的子串才映射到已有 id；「未知」不入库。"""
     import hashlib
     text = (name or "").strip()
-    if not text:
-        return f"extracted_{hashlib.md5(b'').hexdigest()[:8]}"
+    if not text or text.startswith("未知"):
+        return None
     if known_traits:
         lowered = text.lower()
+        best_id = None
+        best_len = 0
         for trait in known_traits:
             tid = getattr(trait, "id", None) or (isinstance(trait, dict) and trait.get("id")) or ""
             tname = getattr(trait, "name", None) or (isinstance(trait, dict) and trait.get("name")) or ""
-            if text == tid or text == tname:
-                return str(tid)
-            if tname and (tname in text or text in tname):
-                return str(tid)
-            if tid and tid.lower() == lowered:
-                return str(tid)
+            tid = str(tid) if tid else ""
+            tname = str(tname) if tname else ""
+            if text == tid or text == tname or (tid and tid.lower() == lowered):
+                return tid
+            shorter, longer = (tname, text) if len(tname) <= len(text) else (text, tname)
+            if len(shorter) < 4:
+                continue
+            pos = longer.find(shorter)
+            if pos < 0:
+                continue
+            if len(shorter) / max(len(longer), 1) < 0.5:
+                continue
+            if len(shorter) > best_len:
+                best_id = tid
+                best_len = len(shorter)
+        if best_id:
+            return best_id
     suffix = hashlib.md5(text.encode()).hexdigest()[:8]
     return f"extracted_{suffix}"

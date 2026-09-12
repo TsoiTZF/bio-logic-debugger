@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
 from typing import Optional
@@ -16,8 +15,6 @@ from typing import Optional
 from bio_logic_debugger.core.domain import (
     BreedingGoal,
     ConstraintSeverity,
-    EvidenceLevel,
-    Trait,
     TraitTarget,
 )
 from bio_logic_debugger.core.engine import BioLogicEngine
@@ -94,7 +91,7 @@ class BioLogicCLI:
             print(f"  标签: {', '.join(trait.tags)}")
 
         # 显示相关关联
-        print(f"\n  相关关联:")
+        print("\n  相关关联:")
         for corr in self.engine.iter_correlations():
             if trait.id in (corr.trait_a, corr.trait_b):
                 other = corr.trait_b if corr.trait_a == trait.id else corr.trait_a
