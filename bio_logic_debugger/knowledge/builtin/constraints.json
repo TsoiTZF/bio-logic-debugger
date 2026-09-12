@@ -292,5 +292,28 @@
         "year": 0
       }
     ]
+  },
+  {
+    "id": "rice_yield_components_ceiling",
+    "name": "产量三要素不可同时取高",
+    "description": "有效穗≥20、每穗粒数≥280、千粒重≥32 同时出现时，补偿效应通常已经很强。这是经验冲突，不是生理不可能。",
+    "severity": "WARNING",
+    "scope": "SPECIES",
+    "species": "水稻",
+    "condition_expr": "$rice_panicle_number >= 20 AND $rice_grain_per_panicle >= 280 AND $rice_1000_grain_weight >= 32",
+    "consequence": "库容结构失衡，充实度和结实率下降。",
+    "confidence": 0.7,
+    "tags": [
+      "产量构成"
+    ],
+    "evidence": [
+      {
+        "level": "SUGGESTED",
+        "source": "产量构成因子补偿",
+        "description": "穗数、粒数、粒重相互制约",
+        "url": "",
+        "year": 0
+      }
+    ]
   }
 ]

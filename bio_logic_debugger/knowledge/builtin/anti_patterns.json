@@ -161,7 +161,7 @@
     ],
     "trigger_intents": {
       "rice_grain_length": "better",
-      "rice_grain_width": "better",
+      "rice_grain_width": "worse",
       "rice_1000_grain_weight": "better",
       "rice_chalkiness": "worse"
     }
@@ -493,5 +493,55 @@
       "rice_head_rice_recovery": "better",
       "rice_1000_grain_weight": "better"
     }
+  },
+  {
+    "id": "rice_yield_component_all_max",
+    "name": "产量三要素同时拉满",
+    "description": "穗数、每穗粒数、千粒重相互补偿。三要素同时追高时，库源分配通常撑不住，不是可叠加的独立增益。",
+    "trigger_traits": [
+      "rice_panicle_number",
+      "rice_grain_per_panicle",
+      "rice_1000_grain_weight"
+    ],
+    "trigger_intents": {
+      "rice_panicle_number": "better",
+      "rice_grain_per_panicle": "better",
+      "rice_1000_grain_weight": "better"
+    },
+    "severity": "WARNING",
+    "historical_examples": [
+      "高穗数品系每穗粒数和粒重下降",
+      "大粒型品系有效穗和结实率下降"
+    ],
+    "failed_approaches": [
+      {
+        "description": "把产量构成因子都当可独立叠加的目标",
+        "reason_failed": "穗数、粒数、粒重存在资源竞争",
+        "year_range": [
+          0,
+          0
+        ],
+        "reference": ""
+      }
+    ],
+    "alternative_directions": [
+      "先定主攻构成因子，其余维持中等",
+      "用收获指数和结实率约束粒数-粒重组合"
+    ],
+    "mechanism": "光合产物总量有限，穗数、粒数、粒重争夺同一库源。",
+    "confidence": 0.75,
+    "tags": [
+      "产量构成"
+    ],
+    "species": "水稻",
+    "evidence": [
+      {
+        "level": "SUGGESTED",
+        "source": "产量构成因子补偿",
+        "description": "教科书中的穗粒重相互制约",
+        "url": "",
+        "year": 0
+      }
+    ]
   }
 ]

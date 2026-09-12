@@ -128,10 +128,22 @@ class BioLogicEngine:
             self.register_correlation(corr)
 
     def register_constraint(self, constraint: BiologicalConstraint) -> None:
+        constraint.condition_expr = self._rewrite_expr_ids(constraint.condition_expr or "")
         self._constraints.append(constraint)
 
     def register_constraints(self, constraints: list[BiologicalConstraint]) -> None:
-        self._constraints.extend(constraints)
+        for constraint in constraints:
+            self.register_constraint(constraint)
+
+    def _rewrite_expr_ids(self, expr: str) -> str:
+        if not expr:
+            return expr
+        for alias in sorted(self._alias_to_id, key=len, reverse=True):
+            canon = self._alias_to_id[alias]
+            if alias == canon:
+                continue
+            expr = expr.replace("$" + alias, "$" + canon)
+        return expr
 
     def register_anti_pattern(self, pattern: AntiPattern) -> None:
         pattern.trigger_traits = [self.canonical_id(t) for t in pattern.trigger_traits]

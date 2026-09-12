@@ -5,6 +5,14 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.10] - 2026-09-12
+
+### Fixed
+- 全部性状写明 higher_is_better；垩白、蛋白、叶角、粒宽为越低越好
+- 产量三要素同时取高给出 WARNING，不再假装互相独立
+- 约束表达式里的旧别名会改写成规范 id
+- 文献导入不再覆盖已有性状；PDF 默认读到 20 万字
+
 ## [0.2.9] - 2026-09-12
 
 ### Fixed

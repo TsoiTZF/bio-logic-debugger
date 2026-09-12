@@ -81,7 +81,7 @@ bio_logic_debugger/
 内置知识在 `bio_logic_debugger/knowledge/builtin/*.json`（随包分发）。
 社区同步缓存写在用户目录 `~/.bio-logic-debugger/community/`，不进软件包。
 
-当前是 **水稻 (Oryza sativa) 示例库**：性状 40、关联 30、约束 9、反模式 7。
+当前是 **水稻 (Oryza sativa) 示例库**：性状 40、关联 30、约束 10、反模式 8。
 相关系数多为示意量级，不是从某张表逐格抄来的；没有 URL 的证据不会标 CONFIRMED。基因克隆论文不再拿去撑无关的 r。
 
 FATAL 表示当前规则下的生理极限；SEVERE/WARNING 是反复被提到的冲突，不是「绝对不可能」。

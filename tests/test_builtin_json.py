@@ -11,14 +11,14 @@ def test_builtin_json_counts():
     data = load_builtin()
     assert len(data["traits"]) == 40
     assert len(data["correlations"]) == 30
-    assert len(data["constraints"]) == 9
-    assert len(data["anti_patterns"]) == 7
+    assert len(data["constraints"]) == 10
+    assert len(data["anti_patterns"]) == 8
 
 
 def test_shim_matches_json():
     assert len(TRAITS) == 40
     assert len(CORRELATIONS) == 30
-    assert len(CONSTRAINTS) == 9
+    assert len(CONSTRAINTS) == 10
     assert CONSTRAINTS[0].condition_expr.startswith("$rice_plant_height")
 
 
@@ -29,6 +29,18 @@ def test_evidence_roundtrip():
     assert restored.evidence[0].source == original.evidence[0].source
     assert restored.evidence[0].level == original.evidence[0].level
     assert restored.mechanism == original.mechanism
+
+
+def test_every_trait_declares_higher_is_better():
+    data = load_builtin()
+    missing = [t["id"] for t in data["traits"] if "higher_is_better" not in t]
+    assert missing == []
+    by_id = {t["id"]: t["higher_is_better"] for t in data["traits"]}
+    assert by_id["rice_chalkiness"] is False
+    assert by_id["rice_protein_content"] is False
+    assert by_id["rice_leaf_angle"] is False
+    assert by_id["rice_lodging_resistance"] is False
+    assert by_id["rice_yield_per_mu"] is True
 
 
 def test_confirmed_evidence_has_url():

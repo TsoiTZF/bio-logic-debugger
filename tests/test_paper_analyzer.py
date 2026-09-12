@@ -30,6 +30,17 @@ def test_name_to_id_rejects_unknown_and_short_fuzzy():
     assert name_to_id("全新性状甲", traits).startswith("extracted_")
 
 
+def test_items_to_traits_does_not_overwrite_known():
+    known = [{"id": "rice_yield_per_mu", "name": "亩产", "aliases": ["rice_yield_per_ha"]}]
+    items = [
+        ExtractedItem(item_type="trait", data={"name": "亩产", "range": [1, 2], "unit": "kg"}),
+        ExtractedItem(item_type="trait", data={"name": "新穗型指数", "range": [1, 2], "unit": ""}),
+    ]
+    out = items_to_traits(items, known)
+    assert all(d["id"] != "rice_yield_per_mu" for d in out)
+    assert any(d["name"] == "新穗型指数" for d in out)
+
+
 def test_items_to_traits_skips_unknown():
     items = [
         ExtractedItem(item_type="trait", data={"name": "未知性状（g）", "range": [1, 2], "unit": "g"}),

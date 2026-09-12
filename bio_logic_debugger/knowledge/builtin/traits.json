@@ -14,7 +14,8 @@
       "核心"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_yield_per_mu",
@@ -34,7 +35,8 @@
     "confidence": 1.0,
     "aliases": [
       "rice_yield_per_ha"
-    ]
+    ],
+    "higher_is_better": true
   },
   {
     "id": "rice_panicle_number",
@@ -51,7 +53,8 @@
       "株型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_grain_per_panicle",
@@ -67,7 +70,8 @@
       "产量"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_1000_grain_weight",
@@ -84,7 +88,8 @@
       "粒型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_harvest_index",
@@ -101,7 +106,8 @@
       "株型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_biomass",
@@ -117,7 +123,8 @@
       "产量"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_spikelet_fertility",
@@ -133,7 +140,8 @@
       "产量"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_plant_height",
@@ -149,7 +157,8 @@
       "株型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_tiller_number",
@@ -166,7 +175,8 @@
       "产量"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_culm_strength",
@@ -183,12 +193,13 @@
       "抗逆"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_leaf_angle",
     "name": "叶角",
-    "description": "叶片与茎秆的夹角",
+    "description": "叶片与茎秆夹角。理想株型偏直立，角度越小越好。",
     "category": "株型",
     "unit": "度",
     "typical_range": [
@@ -200,7 +211,8 @@
       "光合"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_flag_leaf_length",
@@ -216,7 +228,8 @@
       "株型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_grain_length",
@@ -233,12 +246,13 @@
       "粒型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_grain_width",
     "name": "粒宽",
-    "description": "谷粒宽度",
+    "description": "籽粒宽度。优质籼稻偏细长，过宽通常更差。",
     "category": "品质",
     "unit": "mm",
     "typical_range": [
@@ -250,7 +264,8 @@
       "粒型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_length_width_ratio",
@@ -267,7 +282,8 @@
       "粒型"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_amylose_content",
@@ -284,7 +300,8 @@
       "食味"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_gel_consistency",
@@ -301,12 +318,13 @@
       "食味"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_protein_content",
     "name": "蛋白质含量",
-    "description": "稻米蛋白质含量",
+    "description": "稻米蛋白质含量。食味上通常越低越好。",
     "category": "品质",
     "unit": "%",
     "typical_range": [
@@ -318,7 +336,8 @@
       "营养"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": false
   },
   {
     "id": "rice_chalkiness",
@@ -371,7 +390,8 @@
       "食味"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_aroma",
@@ -388,7 +408,8 @@
       "食味"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_blast_resistance",
@@ -576,7 +597,8 @@
       "生育期"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_grain_filling_period",
@@ -592,7 +614,8 @@
       "生育期"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_growth_duration",
@@ -608,7 +631,8 @@
       "生育期"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_photosynthetic_rate",
@@ -625,7 +649,8 @@
       "光合"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_spad_value",
@@ -642,7 +667,8 @@
       "光合"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_root_depth",
@@ -659,7 +685,8 @@
       "根系"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   },
   {
     "id": "rice_nitrogen_use_efficiency",
@@ -676,6 +703,7 @@
       "营养"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "higher_is_better": true
   }
 ]

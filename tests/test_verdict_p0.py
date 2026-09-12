@@ -19,6 +19,19 @@ def _rice() -> BioLogicEngine:
     return engine
 
 
+def test_yield_components_all_high_is_warning():
+    engine = _rice()
+    goal = BreedingGoal(name="三要素全高")
+    goal.add_target(TraitTarget("rice_panicle_number", 22, ">="))
+    goal.add_target(TraitTarget("rice_grain_per_panicle", 300, ">="))
+    goal.add_target(TraitTarget("rice_1000_grain_weight", 33, ">="))
+    report = engine.validate(goal)
+    assert any(v.constraint_id == "rice_yield_components_ceiling" for v in report.violations)
+    assert any(p.id == "rice_yield_component_all_max" for p in report.matched_anti_patterns)
+    assert report.passed
+    assert report.verdict() == "谨慎推进"
+
+
 def test_drought_warning_does_not_fail_report():
     engine = _rice()
     goal = BreedingGoal(name="高抗遇大旱", environment={"drought_severity": "severe"})

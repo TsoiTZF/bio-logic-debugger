@@ -351,6 +351,13 @@ def items_to_traits(items: list[ExtractedItem], known_traits: list | None = None
     """将提取项中的性状转换为 knowledge_store 可用的 dict"""
     results = []
     seen_names: set[str] = set()
+    known_ids: set[str] = set()
+    for trait in known_traits or []:
+        kid = getattr(trait, "id", None) or (isinstance(trait, dict) and trait.get("id"))
+        if kid:
+            known_ids.add(str(kid))
+        aliases = getattr(trait, "aliases", None) or (isinstance(trait, dict) and trait.get("aliases")) or []
+        known_ids.update(str(a) for a in aliases if a)
     for item in items:
         if item.item_type != "trait":
             continue
@@ -358,7 +365,7 @@ def items_to_traits(items: list[ExtractedItem], known_traits: list | None = None
         if not name or name in seen_names:
             continue
         tid = name_to_id(name, known_traits)
-        if not tid:
+        if not tid or tid in known_ids:
             continue
         seen_names.add(name)
         r = item.data.get("range", [None, None])

@@ -1,4 +1,11 @@
-from bio_logic_debugger.core.domain import BreedingGoal, CorrelationType, TraitCorrelation, TraitTarget
+from bio_logic_debugger.core.domain import (
+    BiologicalConstraint,
+    BreedingGoal,
+    ConstraintSeverity,
+    CorrelationType,
+    TraitCorrelation,
+    TraitTarget,
+)
 from bio_logic_debugger.core.engine import BioLogicEngine
 from bio_logic_debugger.knowledge.rice_knowledge import TRAITS, CORRELATIONS, CONSTRAINTS
 
@@ -36,6 +43,24 @@ def test_batch_register_canonicalizes_alias():
     pairs = {(c.trait_a, c.trait_b) for c in engine.iter_correlations()}
     assert ("rice_yield_per_mu", "rice_chalkiness") in pairs
     assert all("rice_yield_per_ha" not in pair for pair in pairs)
+
+
+def test_constraint_expr_rewrites_alias():
+    engine = BioLogicEngine()
+    engine.register_traits(TRAITS)
+    engine.register_constraint(BiologicalConstraint(
+        id="alias_yield",
+        name="旧id",
+        description="",
+        severity=ConstraintSeverity.WARNING,
+        condition_expr="$rice_yield_per_ha > 800",
+        confidence=1.0,
+    ))
+    assert engine.iter_constraints()[0].condition_expr == "$rice_yield_per_mu > 800"
+    goal = BreedingGoal(name="高产")
+    goal.add_target(TraitTarget("rice_yield_per_ha", 900, ">="))
+    report = engine.validate(goal)
+    assert any(v.constraint_id == "alias_yield" for v in report.violations)
 
 
 def test_some_evidence_has_real_urls():

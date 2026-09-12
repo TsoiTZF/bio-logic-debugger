@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def extract_text(pdf_bytes: bytes, max_chars: int = 50000) -> str:
+def extract_text(pdf_bytes: bytes, max_chars: int = 200000) -> str:
     """从 PDF 字节数据中提取文本"""
     try:
         import fitz  # PyMuPDF
@@ -33,7 +33,7 @@ def extract_text(pdf_bytes: bytes, max_chars: int = 50000) -> str:
     return "\n".join(pages_text)
 
 
-def extract_text_from_path(path: str, max_chars: int = 50000) -> str:
+def extract_text_from_path(path: str, max_chars: int = 200000) -> str:
     """从文件路径提取 PDF 文本"""
     try:
         import fitz
