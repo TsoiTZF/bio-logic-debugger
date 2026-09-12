@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.3] - 2026-09-12
 
+### Added
+- GitHub Actions：Python 3.10 / 3.12 跑 pytest
+
 ### Changed
 - Streamlit 拆到 `ui/runtime.py` 与 `ui/pages/*`，`app.py` 只做入口
 - 界面不再访问 `engine._traits` 等私有字段
