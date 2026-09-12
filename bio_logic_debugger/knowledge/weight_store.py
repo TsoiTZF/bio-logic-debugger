@@ -28,6 +28,35 @@ DEFAULT_WEIGHTS = {
     "constraints": {},
 }
 
+_SLIDER_PREFIXES = (
+    ("wt_trait_", "traits"),
+    ("wt_corr_", "correlations"),
+    ("wt_cstr_", "constraints"),
+)
+
+
+def merge_slider_overrides(stored: dict, session_state: dict) -> dict:
+    """把已渲染滑条叠到磁盘权重上。未出现的 key 保持原值，避免折叠 expander 把权重清空。"""
+    merged = {
+        "traits": dict(stored.get("traits") or {}),
+        "correlations": dict(stored.get("correlations") or {}),
+        "constraints": dict(stored.get("constraints") or {}),
+    }
+    for key, val in session_state.items():
+        if not isinstance(key, str) or not isinstance(val, (int, float)):
+            continue
+        for prefix, section in _SLIDER_PREFIXES:
+            if key.startswith(prefix):
+                eid = key[len(prefix):]
+                if not eid:
+                    continue
+                if float(val) == 1.0:
+                    merged[section].pop(eid, None)
+                else:
+                    merged[section][eid] = float(val)
+                break
+    return merged
+
 
 def _ensure_dir() -> None:
     user_data_dir()

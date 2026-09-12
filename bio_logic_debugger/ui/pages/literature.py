@@ -5,6 +5,7 @@ import streamlit as st
 from bio_logic_debugger.core.engine import BioLogicEngine
 from bio_logic_debugger.knowledge import knowledge_store
 from bio_logic_debugger.knowledge.weight_store import load_weights as load_user_weights
+from bio_logic_debugger.knowledge.weight_store import merge_slider_overrides
 from bio_logic_debugger.knowledge.weight_store import save_weights as save_user_weights
 
 
@@ -447,89 +448,46 @@ def render(engine: BioLogicEngine) -> None:
         st.caption("调整每条知识对验证结果的影响程度。降低不可靠知识的权重可减少误报。")
 
         user_weights = load_user_weights()
-        # expander 折叠时内部 widget 可能不进 session_state，保存必须先有这些字典。
-        trait_weights: dict[str, float] = {}
-        corr_weights: dict[str, float] = {}
-        cstr_weights: dict[str, float] = {}
-
-        # 性状权重
-        with st.expander(f"🧬 性状权重（{len(engine.trait_ids())} 条）"):
+        # tab 的内容每轮都会渲染，滑条一定进 session_state；保存时与磁盘合并。
+        wtab1, wtab2, wtab3 = st.tabs([
+            f"性状权重（{len(engine.trait_ids())}）",
+            f"关联权重（{len(engine.iter_correlations())}）",
+            f"约束权重（{len(engine.iter_constraints())}）",
+        ])
+        with wtab1:
             st.caption("低置信度的性状，其范围越界警告将降级为 INFO")
             for t in sorted(engine.iter_traits(), key=lambda x: x.id):
                 tid = t.id
                 default_conf = user_weights.get("traits", {}).get(tid, t.confidence)
-                w = st.slider(
+                st.slider(
                     f"{t.name}（{t.category}）",
-                    min_value=0.0, max_value=1.0, value=default_conf, step=0.1,
+                    min_value=0.0, max_value=1.0, value=float(default_conf), step=0.1,
                     key=f"wt_trait_{tid}",
                 )
-                if w != 1.0:
-                    trait_weights[tid] = w
-
-        # 关联权重
-        with st.expander(f"🔗 关联权重（{len(engine.iter_correlations())} 条）"):
-            st.caption("低置信度的关联，验证时有效强度降低，警告等级相应降级")
+        with wtab2:
+            st.caption("低置信度的关联，验证时有效强度降低")
             for c in engine.iter_correlations():
                 name_a = engine.trait_name(c.trait_a)
                 name_b = engine.trait_name(c.trait_b)
                 key = f"{c.trait_a}__{c.trait_b}" if c.trait_a < c.trait_b else f"{c.trait_b}__{c.trait_a}"
                 default_conf = user_weights.get("correlations", {}).get(key, c.confidence)
-                w = st.slider(
+                st.slider(
                     f"{name_a} ↔ {name_b}（r={c.strength}）",
-                    min_value=0.0, max_value=1.0, value=default_conf, step=0.1,
+                    min_value=0.0, max_value=1.0, value=float(default_conf), step=0.1,
                     key=f"wt_corr_{key}",
                 )
-                if w != 1.0:
-                    corr_weights[key] = w
-
-        # 约束权重
-        with st.expander(f"📜 约束权重（{len(engine.iter_constraints())} 条）"):
+        with wtab3:
             st.caption("低置信度的约束，违反时严重等级自动降级")
             for c in engine.iter_constraints():
                 default_conf = user_weights.get("constraints", {}).get(c.id, c.confidence)
-                w = st.slider(
+                st.slider(
                     f"{c.name}（{c.severity.name}）",
-                    min_value=0.0, max_value=1.0, value=default_conf, step=0.1,
+                    min_value=0.0, max_value=1.0, value=float(default_conf), step=0.1,
                     key=f"wt_cstr_{c.id}",
                 )
-                if w != 1.0:
-                    cstr_weights[c.id] = w
 
-        # 保存按钮：未展开的 expander 里没有 widget，必须和磁盘已有权重合并。
         if st.button("💾 保存权重并重新加载引擎", type="primary", use_container_width=True):
-            merged_weights = load_user_weights()
-            merged_weights.setdefault("traits", {})
-            merged_weights.setdefault("correlations", {})
-            merged_weights.setdefault("constraints", {})
-            # 未展开 expander 时滑条不进 session_state，只覆盖实际出现过的 widget
-            for key, val in list(st.session_state.items()):
-                if not isinstance(key, str) or not isinstance(val, (int, float)):
-                    continue
-                if key.startswith("wt_trait_"):
-                    tid = key[len("wt_trait_"):]
-                    if val == 1.0:
-                        merged_weights["traits"].pop(tid, None)
-                    else:
-                        merged_weights["traits"][tid] = float(val)
-                elif key.startswith("wt_corr_"):
-                    cid = key[len("wt_corr_"):]
-                    if val == 1.0:
-                        merged_weights["correlations"].pop(cid, None)
-                    else:
-                        merged_weights["correlations"][cid] = float(val)
-                elif key.startswith("wt_cstr_"):
-                    cid = key[len("wt_cstr_"):]
-                    if val == 1.0:
-                        merged_weights["constraints"].pop(cid, None)
-                    else:
-                        merged_weights["constraints"][cid] = float(val)
-            for tid, w in trait_weights.items():
-                merged_weights["traits"][tid] = w
-            for key, w in corr_weights.items():
-                merged_weights["correlations"][key] = w
-            for cid, w in cstr_weights.items():
-                merged_weights["constraints"][cid] = w
-            save_user_weights(merged_weights)
+            save_user_weights(merge_slider_overrides(load_user_weights(), dict(st.session_state)))
             st.cache_resource.clear()
             st.success("✅ 权重已保存，引擎已重新加载！")
             st.rerun()
