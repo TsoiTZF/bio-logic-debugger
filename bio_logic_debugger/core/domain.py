@@ -86,6 +86,7 @@ class Trait:
     confidence: float = 1.0
     # SES 1–9 级：1 为优/抗，9 为劣/感，越大越差
     higher_is_better: bool = True
+    aliases: list[str] = field(default_factory=list)
 
 
 # ═══════════════════════════════════════════════════════════════

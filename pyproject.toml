@@ -1,6 +1,6 @@
 [project]
 name = "bio-logic-debugger"
-version = "0.2.4"
+version = "0.2.5"
 description = "让邺城燃烧 - 育种目标生物逻辑验证工具"
 authors = [
     {name = "TsoiTZF"}

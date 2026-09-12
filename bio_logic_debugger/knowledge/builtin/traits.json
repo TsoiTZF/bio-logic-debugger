@@ -17,7 +17,7 @@
     "confidence": 1.0
   },
   {
-    "id": "rice_yield_per_ha",
+    "id": "rice_yield_per_mu",
     "name": "亩产",
     "description": "每亩稻谷产量。标识含 per_ha 为历史命名，单位是 kg/亩，不是公顷。",
     "category": "产量",
@@ -31,7 +31,10 @@
       "核心"
     ],
     "species": "通用",
-    "confidence": 1.0
+    "confidence": 1.0,
+    "aliases": [
+      "rice_yield_per_ha"
+    ]
   },
   {
     "id": "rice_panicle_number",

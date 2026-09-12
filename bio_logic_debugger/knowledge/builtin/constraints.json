@@ -22,14 +22,14 @@
         "level": "CONFIRMED",
         "source": "sd1 基因研究",
         "description": "半矮秆基因提高抗倒伏性的机制",
-        "url": "",
+        "url": "https://doi.org/10.1073/pnas.132266399",
         "year": 0
       },
       {
         "level": "STRONG",
         "source": "Khush, 1999, Green Revolution",
         "description": "绿色革命的核心：矮秆抗倒伏",
-        "url": "",
+        "url": "https://doi.org/10.1139/g99-044",
         "year": 1999
       }
     ]
@@ -64,7 +64,7 @@
         "level": "CONFIRMED",
         "source": "IRRI 品质评价标准",
         "description": "直链淀粉与胶稠度的对应关系",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       }
     ]
@@ -164,7 +164,7 @@
         "level": "STRONG",
         "source": "中国优质稻谷标准 GB/T 17891",
         "description": "垩白度和整精米率的品质要求",
-        "url": "",
+        "url": "https://openstd.samr.gov.cn/bzgk/gb/std_list",
         "year": 0
       }
     ]
@@ -219,7 +219,7 @@
         "level": "STRONG",
         "source": "IRRI 耐旱研究",
         "description": "严重干旱下的产量损失数据",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       },
       {

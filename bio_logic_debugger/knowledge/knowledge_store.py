@@ -68,6 +68,7 @@ def trait_to_dict(t: Trait) -> dict:
         "species": t.species,
         "confidence": t.confidence,
         "higher_is_better": t.higher_is_better,
+        "aliases": list(t.aliases or []),
     }
 
 
@@ -95,6 +96,7 @@ def trait_from_dict(d: dict) -> Trait:
         species=d.get("species", "通用"),
         confidence=d.get("confidence", 1.0),
         higher_is_better=_infer_higher_is_better(d, typical),
+        aliases=list(d.get("aliases") or []),
     )
 
 

@@ -13,7 +13,7 @@
         "level": "CONFIRMED",
         "source": "Yoshida, 1981, Fundamentals of Rice Crop Science",
         "description": "经典教材中的源-库理论",
-        "url": "",
+        "url": "https://www.irri.org/resources/publications",
         "year": 1981
       },
       {
@@ -46,7 +46,7 @@
         "level": "STRONG",
         "source": "Peng et al., 2008, Rice yield potential",
         "description": "IRRI 长期育种数据分析",
-        "url": "",
+        "url": "https://doi.org/10.1016/j.fcr.2008.04.001",
         "year": 2008
       },
       {
@@ -105,7 +105,7 @@
         "level": "STRONG",
         "source": "Fan et al., 2006, GS3 gene cloning",
         "description": "GS3 基因对粒长和粒重的多效性",
-        "url": "",
+        "url": "https://doi.org/10.1007/s00122-006-0218-1",
         "year": 2006
       }
     ]
@@ -137,7 +137,7 @@
     ]
   },
   {
-    "trait_a": "rice_yield_per_ha",
+    "trait_a": "rice_yield_per_mu",
     "trait_b": "rice_chalkiness",
     "corr_type": "POSITIVE",
     "strength": 0.3,
@@ -157,7 +157,7 @@
         "level": "STRONG",
         "source": "Chalk5 基因研究",
         "description": "垩白形成与灌浆物质分配相关",
-        "url": "",
+        "url": "https://doi.org/10.1038/ng.2923",
         "year": 0
       }
     ]
@@ -195,7 +195,7 @@
         "level": "CONFIRMED",
         "source": "Fan et al., 2006, GS3 gene cloning",
         "description": "GS3 基因对粒长和粒重的多效性",
-        "url": "",
+        "url": "https://doi.org/10.1007/s00122-006-0218-1",
         "year": 2006
       }
     ]
@@ -214,7 +214,7 @@
         "level": "CONFIRMED",
         "source": "Song et al., 2007, GW2 gene",
         "description": "GW2 基因对粒宽和粒重的正效应",
-        "url": "",
+        "url": "https://doi.org/10.1038/ng1982",
         "year": 2007
       }
     ]
@@ -233,7 +233,7 @@
         "level": "CONFIRMED",
         "source": "IRRI 稻米品质评价标准",
         "description": "国际水稻研究所标准",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       },
       {
@@ -266,7 +266,7 @@
         "level": "STRONG",
         "source": "IRRI 品质评价体系",
         "description": "直链淀粉与糊化温度的负相关",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       }
     ]
@@ -311,7 +311,7 @@
         "level": "STRONG",
         "source": "中国优质稻谷标准 GB/T 17891",
         "description": "垩白度和整精米率均为重要品质指标",
-        "url": "",
+        "url": "https://openstd.samr.gov.cn/bzgk/gb/std_list",
         "year": 0
       }
     ]
@@ -356,14 +356,14 @@
         "level": "CONFIRMED",
         "source": "Khush, 1999, Green Revolution",
         "description": "水稻绿色革命的回顾",
-        "url": "",
+        "url": "https://doi.org/10.1139/g99-044",
         "year": 1999
       },
       {
         "level": "CONFIRMED",
         "source": "sd1 基因功能研究",
         "description": "sd1 降低株高 20-30%，显著提高抗倒伏性",
-        "url": "",
+        "url": "https://doi.org/10.1073/pnas.132266399",
         "year": 0
       }
     ]
@@ -382,7 +382,7 @@
         "level": "CONFIRMED",
         "source": "IRRI 株型育种理论",
         "description": "动态株型概念",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       },
       {
@@ -550,7 +550,7 @@
         "level": "STRONG",
         "source": "Ghd7 基因研究",
         "description": "Ghd7 功能性等位基因延迟抽穗 10-20 天，增加产量潜力",
-        "url": "",
+        "url": "https://doi.org/10.1038/ng.143",
         "year": 2008
       }
     ]
@@ -588,7 +588,7 @@
         "level": "STRONG",
         "source": "IRRI 耐旱育种研究",
         "description": "耐旱性与产量的权衡关系",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       },
       {
@@ -614,14 +614,14 @@
         "level": "STRONG",
         "source": "DRO1 基因研究",
         "description": "深根基因 DRO1 提高耐旱性",
-        "url": "",
+        "url": "https://doi.org/10.1038/ng.2725",
         "year": 0
       },
       {
         "level": "STRONG",
         "source": "IRRI 根系研究",
         "description": "根系深度与耐旱性的正相关",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       }
     ]

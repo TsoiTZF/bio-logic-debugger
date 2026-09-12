@@ -4,7 +4,7 @@
     "name": "高产低质的陷阱",
     "description": "追求单一产量指标突破的情况下，品质性状（粒型、食味）往往会系统性下降。过去三十年中国优质稻育种的经验表明，在不引入特殊种质资源的条件下，亩产超过 800kg 的品种鲜有达到国标一级优质米的案例。",
     "trigger_traits": [
-      "rice_yield_per_ha",
+      "rice_yield_per_mu",
       "rice_grain_length",
       "rice_amylose_content"
     ],
@@ -136,14 +136,14 @@
         "level": "STRONG",
         "source": "Fan et al., 2006, GS3 gene",
         "description": "GS3 基因对粒长的调控",
-        "url": "",
+        "url": "https://doi.org/10.1007/s00122-006-0218-1",
         "year": 2006
       },
       {
         "level": "STRONG",
         "source": "Song et al., 2007, GW2 gene",
         "description": "GW2 基因对粒宽的调控",
-        "url": "",
+        "url": "https://doi.org/10.1038/ng1982",
         "year": 2007
       },
       {
@@ -254,7 +254,7 @@
         "level": "STRONG",
         "source": "Xue et al., 2008, Nature Genetics",
         "description": "Ghd7 基因对生育期和产量的调控",
-        "url": "",
+        "url": "https://doi.org/10.1038/ng.143",
         "year": 2008
       },
       {
@@ -307,7 +307,7 @@
         "level": "SUGGESTED",
         "source": "IRRI 部分多抗品系田间数据",
         "description": "多抗品系产量缺陷观察",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       },
       {
@@ -377,7 +377,7 @@
         "level": "STRONG",
         "source": "IRRI 耐旱育种研究",
         "description": "耐旱性与产量的权衡",
-        "url": "",
+        "url": "https://www.irri.org",
         "year": 0
       },
       {
@@ -391,7 +391,7 @@
         "level": "STRONG",
         "source": "DRO1 基因研究",
         "description": "深根基因的产量代价",
-        "url": "",
+        "url": "https://doi.org/10.1038/ng.2725",
         "year": 2010
       }
     ]
@@ -438,14 +438,14 @@
         "level": "STRONG",
         "source": "Chalk5 基因研究",
         "description": "垩白形成的分子机制",
-        "url": "",
+        "url": "https://doi.org/10.1038/ng.2923",
         "year": 0
       },
       {
         "level": "STRONG",
         "source": "中国优质稻谷标准 GB/T 17891",
         "description": "垩白度的品质分级标准",
-        "url": "",
+        "url": "https://openstd.samr.gov.cn/bzgk/gb/std_list",
         "year": 0
       },
       {

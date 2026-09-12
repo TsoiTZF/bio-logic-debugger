@@ -85,6 +85,7 @@ class BioLogicEngine:
 
     def __init__(self):
         self._traits: dict[str, Trait] = {}
+        self._alias_to_id: dict[str, str] = {}
         self._correlations: list[TraitCorrelation] = []
         self._constraints: list[BiologicalConstraint] = []
         self._anti_patterns: AntiPatternMatcher = AntiPatternMatcher()
@@ -106,12 +107,21 @@ class BioLogicEngine:
 
     def register_trait(self, trait: Trait) -> None:
         self._traits[trait.id] = trait
+        self._alias_to_id[trait.id] = trait.id
+        for alias in trait.aliases or []:
+            if alias:
+                self._alias_to_id[alias] = trait.id
+
+    def canonical_id(self, trait_id: str) -> str:
+        return self._alias_to_id.get(trait_id, trait_id)
 
     def register_traits(self, traits: list[Trait]) -> None:
         for t in traits:
             self.register_trait(t)
 
     def register_correlation(self, corr: TraitCorrelation) -> None:
+        corr.trait_a = self.canonical_id(corr.trait_a)
+        corr.trait_b = self.canonical_id(corr.trait_b)
         self._correlations.append(corr)
 
     def register_correlations(self, corrs: list[TraitCorrelation]) -> None:
@@ -124,6 +134,7 @@ class BioLogicEngine:
         self._constraints.extend(constraints)
 
     def register_anti_pattern(self, pattern: AntiPattern) -> None:
+        pattern.trigger_traits = [self.canonical_id(t) for t in pattern.trigger_traits]
         self._anti_patterns.register(pattern)
 
     def register_anti_patterns(self, patterns: list[AntiPattern]) -> None:
@@ -141,7 +152,7 @@ class BioLogicEngine:
         self._llm_callback = callback
 
     def get_trait(self, trait_id: str) -> Optional[Trait]:
-        return self._traits.get(trait_id)
+        return self._traits.get(self.canonical_id(trait_id))
 
     def trait_name(self, trait_id: str) -> str:
         return self._trait_name(trait_id)
@@ -173,6 +184,8 @@ class BioLogicEngine:
           3. （可选）调用 LLM 推理
           4. 生成最终报告
         """
+        for target in goal.targets:
+            target.trait_id = self.canonical_id(target.trait_id)
         ctx = ValidationContext(
             goal=goal,
             trait_map={k: v for k, v in self._traits.items()},
