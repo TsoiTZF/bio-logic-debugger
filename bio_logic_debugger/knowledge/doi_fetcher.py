@@ -8,10 +8,16 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
+from bio_logic_debugger import __version__
+
 logger = logging.getLogger(__name__)
 
 CROSSREF_BASE = "https://api.crossref.org/works"
-USER_AGENT = "BioLogicDebugger/0.3 (https://github.com/TsoiTZF/bio-logic-debugger)"
+
+USER_AGENT = (
+    f"BioLogicDebugger/{__version__} "
+    "(https://github.com/TsoiTZF/bio-logic-debugger)"
+)
 
 
 def _build_headers() -> dict[str, str]:

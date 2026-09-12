@@ -3,6 +3,7 @@ from bio_logic_debugger.knowledge.paper_analyzer import (
     _chunk_text,
     _parse_llm_json,
     _rule_extract,
+    items_to_constraints,
     items_to_traits,
     name_to_id,
 )
@@ -37,6 +38,20 @@ def test_items_to_traits_skips_unknown():
     out = items_to_traits(items)
     assert all(not d["name"].startswith("未知") for d in out)
     assert any(d["name"] == "穗粒数" for d in out)
+
+
+def test_items_to_constraints_skip_empty_and_cap_fatal():
+    items = [
+        ExtractedItem(item_type="constraint", data={"name": "空条件", "condition": "", "severity": "FATAL"}),
+        ExtractedItem(
+            item_type="constraint",
+            data={"name": "有条件", "condition": "$a > 1", "severity": "FATAL"},
+        ),
+    ]
+    out = items_to_constraints(items)
+    assert len(out) == 1
+    assert out[0]["condition_expr"] == "$a > 1"
+    assert out[0]["severity"] == "WARNING"
 
 
 def test_chunk_and_llm_json():

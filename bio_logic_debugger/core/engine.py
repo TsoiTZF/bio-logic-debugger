@@ -124,7 +124,8 @@ class BioLogicEngine:
         self._correlations.append(corr)
 
     def register_correlations(self, corrs: list[TraitCorrelation]) -> None:
-        self._correlations.extend(corrs)
+        for corr in corrs:
+            self.register_correlation(corr)
 
     def register_constraint(self, constraint: BiologicalConstraint) -> None:
         self._constraints.append(constraint)
@@ -141,7 +142,8 @@ class BioLogicEngine:
         self._anti_patterns.register(pattern)
 
     def register_anti_patterns(self, patterns: list[AntiPattern]) -> None:
-        self._anti_patterns.register_many(patterns)
+        for pattern in patterns:
+            self.register_anti_pattern(pattern)
 
     def register_layer(self, layer: ValidationLayer, index: int | None = None) -> None:
         """注册自定义验证层"""
@@ -240,10 +242,9 @@ class BioLogicEngine:
 
         return ValidationReport(
             goal=goal,
-            passed=len([
-                v for v in ctx.violations
-                if v.severity in (ConstraintSeverity.FATAL, ConstraintSeverity.SEVERE)
-            ]) == 0,
+            passed=not any(
+                v.severity == ConstraintSeverity.FATAL for v in ctx.violations
+            ),
             violations=ctx.violations,
             matched_anti_patterns=ctx.matched_anti_patterns,
             suggestions=ctx.suggestions,

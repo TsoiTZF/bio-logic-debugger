@@ -426,15 +426,21 @@ def items_to_constraints(items: list[ExtractedItem], known_traits: list | None =
         cid = name_to_id(name, None)
         if not cid:
             continue
+        expr = str(item.data.get("condition") or "").strip()
+        if not expr:
+            continue
+        severity = str(item.data.get("severity") or "WARNING").upper()
+        if severity == "FATAL":
+            severity = "WARNING"
         seen.add(name)
         results.append({
             "id": cid,
             "name": name,
             "description": item.data.get("description", ""),
-            "severity": item.data.get("severity", "WARNING"),
+            "severity": severity,
             "scope": "SPECIES",
             "species": "通用",
-            "condition_expr": item.data.get("condition", ""),
+            "condition_expr": expr,
             "consequence": "",
             "confidence": item.confidence,
             "tags": ["文献提取"],

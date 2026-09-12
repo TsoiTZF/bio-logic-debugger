@@ -19,6 +19,17 @@ def _rice() -> BioLogicEngine:
     return engine
 
 
+def test_drought_warning_does_not_fail_report():
+    engine = _rice()
+    goal = BreedingGoal(name="高抗遇大旱", environment={"drought_severity": "severe"})
+    goal.add_target(TraitTarget("rice_drought_tolerance", 2, "<="))
+    report = engine.validate(goal)
+    hits = [v for v in report.violations if v.constraint_id == "rice_drought_severe_yield_loss"]
+    assert hits and hits[0].severity == ConstraintSeverity.WARNING
+    assert report.passed
+    assert report.verdict() == "可以推进"
+
+
 def test_builtin_tall_high_resist_is_fatal_weak_is_not():
     engine = _rice()
     resist = BreedingGoal(name="高秆高抗")

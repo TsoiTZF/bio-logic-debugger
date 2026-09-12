@@ -12,7 +12,7 @@
     "tags": [],
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "作物倒伏力学研究",
         "description": "茎秆受力分析",
         "url": "",
@@ -37,8 +37,8 @@
   {
     "id": "rice_amylose_gel_mismatch",
     "name": "直链淀粉与胶稠度的匹配约束",
-    "description": "高直链淀粉（>25%）品种胶稠度不可能达到软胶稠度（>80mm），反之亦然。",
-    "severity": "FATAL",
+    "description": "高直链淀粉（>25%）与软胶稠度（>80mm）通常不兼容。缺少可核对 DOI，不定 FATAL。",
+    "severity": "SEVERE",
     "scope": "SPECIES",
     "species": "水稻",
     "condition_expr": "$rice_amylose_content > 25 AND $rice_gel_consistency > 80",
@@ -47,21 +47,21 @@
     "tags": [],
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "稻米品质化学原理",
         "description": "稻米直链淀粉与胶稠度的理化关系",
         "url": "",
         "year": 0
       },
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "Juliano, 1971, Cereal Science Today",
         "description": "稻米品质分析方法学",
         "url": "",
         "year": 1971
       },
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "IRRI 品质评价标准",
         "description": "直链淀粉与胶稠度的对应关系",
         "url": "",
@@ -72,20 +72,20 @@
   {
     "id": "rice_extreme_precocity",
     "name": "极端早熟的生育期下限",
-    "description": "抽穗天数低于 65 天时基本营养生长期不足。籼/粳临界略有差别，本条用统一阈值，故不定 FATAL。",
-    "severity": "SEVERE",
+    "description": "抽穗天数低于 65 天时营养生长偏短。超早熟材料存在，本条只作警告。",
+    "severity": "WARNING",
     "scope": "SUBSPECIES",
     "species": "水稻",
     "condition_expr": "$rice_heading_days < 65",
     "consequence": "基本营养体不足，产量没有保障。分蘖数和叶面积指数无法达到有效水平。",
-    "confidence": 0.9,
+    "confidence": 0.6,
     "tags": [
       "生育期",
       "临界值"
     ],
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "作物栽培学通论",
         "description": "水稻基本营养生长期需求",
         "url": "",
@@ -103,27 +103,27 @@
   {
     "id": "rice_harvest_index_ceiling",
     "name": "收获指数的生物学上限",
-    "description": "收获指数超过 0.65 接近理论上限，茎鞘叶片生物量很难支撑。证据不足以下 FATAL。",
-    "severity": "SEVERE",
+    "description": "收获指数超过 0.65 接近讨论中的上限，不是已核实的硬天花板。",
+    "severity": "WARNING",
     "scope": "SPECIES",
     "species": "水稻",
     "condition_expr": "$rice_harvest_index > 0.65",
     "consequence": "茎鞘和叶片生物量不足，光合能力受限，产量形成缺乏物质基础。",
-    "confidence": 0.9,
+    "confidence": 0.6,
     "tags": [
       "收获指数",
       "理论上限"
     ],
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "收获指数理论",
         "description": "收获指数的生物学上限研究",
         "url": "",
         "year": 0
       },
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "绿色革命理论",
         "description": "现代品种收获指数 0.50-0.55",
         "url": "",
@@ -203,7 +203,7 @@
   {
     "id": "rice_drought_severe_yield_loss",
     "name": "严重干旱的产量损失下限",
-    "description": "严重干旱下，即使 SES 耐旱达 1–3 级，产量也常明显下降。表达式未绑定产量目标，故只作警告。",
+    "description": "严重干旱下高抗材料也常明显减产。表达式没有产量损失变量，只作警告，不是生理不可能。",
     "severity": "WARNING",
     "scope": "SPECIES",
     "species": "水稻",
@@ -234,8 +234,8 @@
   {
     "id": "rice_cold_tropical",
     "name": "热带品种的耐冷限制",
-    "description": "SES 耐冷 7–9 级（敏感）的材料在低于 15°C 时几乎无法正常结实。1–3 级为高抗，不触发本条。",
-    "severity": "FATAL",
+    "description": "SES 耐冷 7–9 级材料在低于 15°C 时结实很难。缺少 DOI，不定 FATAL。",
+    "severity": "SEVERE",
     "scope": "SUBSPECIES",
     "species": "水稻",
     "condition_expr": "$rice_cold_tolerance >= 7 AND $temperature < 15",

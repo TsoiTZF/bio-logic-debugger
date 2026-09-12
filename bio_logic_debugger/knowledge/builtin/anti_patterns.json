@@ -56,14 +56,14 @@
     "species": "水稻",
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "中国超级稻育种项目评估报告",
         "description": "多年超级稻育种项目评估数据",
         "url": "",
         "year": 2020
       },
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "稻米品质与产量关系的生理学基础",
         "description": "稻米品质与产量关系的生理学基础研究数据",
         "url": "",
@@ -204,7 +204,7 @@
     "species": "水稻",
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "绿色革命理论",
         "description": "sd1 基因的应用与限制",
         "url": "",
@@ -261,7 +261,7 @@
     "species": "水稻",
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "作物生理学通论",
         "description": "生育期与产量的基本关系",
         "url": "",

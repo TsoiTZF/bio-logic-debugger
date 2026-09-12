@@ -5,6 +5,17 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.9] - 2026-09-12
+
+### Fixed
+- 干旱约束保持 WARNING，并写明没有产量损失变量、不是生理不可能
+- 早熟/收获指数降 WARNING；直链淀粉×胶稠度、低温降 SEVERE；passed 只看 FATAL
+- 结论改为可以推进 / 谨慎推进 / 不建议按原目标推进
+- 无 URL 不得标 CONFIRMED；Chalk5/GS3 不再撑无关相关系数
+- 批量注册走单条别名规范化
+- 文献约束空表达式不入库，FATAL 降为 WARNING
+- CrossRef 用英文检索词；README 改为示例库、示意 r、不能替代育种家判断
+
 ## [0.2.8] - 2026-09-12
 
 ### Fixed

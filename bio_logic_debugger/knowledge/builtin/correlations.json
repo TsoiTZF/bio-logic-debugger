@@ -10,7 +10,7 @@
     "antagonistic_threshold": 0.3,
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "Yoshida, 1981, Fundamentals of Rice Crop Science",
         "description": "经典教材中的源-库理论",
         "url": "",
@@ -95,17 +95,17 @@
     "antagonistic_threshold": 0.3,
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "中国优质稻育种实践",
         "description": "多年优质稻育种总结",
         "url": "",
         "year": 0
       },
       {
-        "level": "STRONG",
+        "level": "SUGGESTED",
         "source": "Fan et al., 2006, GS3 gene cloning",
-        "description": "GS3 基因对粒长和粒重的多效性",
-        "url": "https://doi.org/10.1007/s00122-006-0218-1",
+        "description": "粒长基因克隆，不能支撑产量-粒型权衡的 r",
+        "url": "",
         "year": 2006
       }
     ]
@@ -154,10 +154,10 @@
         "year": 0
       },
       {
-        "level": "STRONG",
+        "level": "SUGGESTED",
         "source": "Chalk5 基因研究",
-        "description": "垩白形成与灌浆物质分配相关",
-        "url": "https://doi.org/10.1038/ng.2923",
+        "description": "垩白基因克隆，不能支撑亩产-垩白相关系数",
+        "url": "",
         "year": 2014
       }
     ]
@@ -230,21 +230,21 @@
     "antagonistic_threshold": 0.3,
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "IRRI 稻米品质评价标准",
         "description": "国际水稻研究所标准",
         "url": "",
         "year": 0
       },
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "Juliano, 1971, Cereal Science Today",
         "description": "稻米品质分析方法学",
         "url": "",
         "year": 1971
       },
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "中国水稻研究所品质分析",
         "description": "多年品质数据累积",
         "url": "",
@@ -346,7 +346,7 @@
     "antagonistic_threshold": 0.4,
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "绿色革命经典理论",
         "description": "sd1 半矮秆基因的广泛应用",
         "url": "",
@@ -379,7 +379,7 @@
     "antagonistic_threshold": 0.3,
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "IRRI 株型育种理论",
         "description": "动态株型概念",
         "url": "",
@@ -405,14 +405,14 @@
     "antagonistic_threshold": 0.4,
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "绿色革命理论",
         "description": "矮秆品种收获指数显著提高",
         "url": "",
         "year": 0
       },
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "收获指数理论",
         "description": "收获指数的生物学上限约 0.60",
         "url": "",
@@ -431,7 +431,7 @@
     "antagonistic_threshold": 0.3,
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "作物栽培学通论",
         "description": "分蘖与穗数的正相关关系",
         "url": "",
@@ -540,7 +540,7 @@
     "antagonistic_threshold": 0.3,
     "evidence": [
       {
-        "level": "CONFIRMED",
+        "level": "SUGGESTED",
         "source": "作物生理学通论",
         "description": "生育期与产量潜力的基本关系",
         "url": "",

@@ -31,6 +31,29 @@ def test_evidence_roundtrip():
     assert restored.mechanism == original.mechanism
 
 
+def test_confirmed_evidence_has_url():
+    data = load_builtin()
+    missing = []
+    for key in ("correlations", "constraints", "anti_patterns"):
+        for item in data[key]:
+            for e in item.get("evidence") or []:
+                if str(e.get("level", "")).upper() == "CONFIRMED" and not (e.get("url") or "").strip():
+                    missing.append((key, item.get("id") or (item.get("trait_a"), item.get("trait_b")), e.get("source")))
+    assert missing == []
+
+
+def test_gene_papers_not_used_as_correlation_r():
+    data = load_builtin()
+    for item in data["correlations"]:
+        pair = {item.get("trait_a"), item.get("trait_b")}
+        for e in item.get("evidence") or []:
+            url = e.get("url") or ""
+            if pair == {"rice_yield_per_mu", "rice_chalkiness"}:
+                assert "ng.2923" not in url
+            if pair == {"rice_yield_per_plant", "rice_grain_length"}:
+                assert "s00122-006-0218-1" not in url
+
+
 def test_load_and_merge_from_json():
     traits, correlations, constraints, anti_patterns = load_and_merge()
     assert len(traits) >= 40

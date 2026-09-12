@@ -24,65 +24,51 @@ def _seen_papers_path() -> Path:
 # ═══════════════════════════════════════════════════════════════
 
 
+# CrossRef 是英文索引，不要把中文性状名直接丢进去。
+TRAIT_SEARCH_EN = {
+    "rice_yield_per_plant": "rice yield per plant",
+    "rice_yield_per_mu": "rice grain yield",
+    "rice_chalkiness": "rice chalkiness",
+    "rice_heading_days": "rice heading date",
+    "rice_amylose_content": "rice amylose content",
+    "rice_gel_consistency": "rice gel consistency",
+    "rice_head_rice_recovery": "head rice recovery",
+    "rice_plant_height": "rice plant height",
+    "rice_lodging_resistance": "rice lodging resistance",
+    "rice_harvest_index": "rice harvest index",
+    "rice_grain_length": "rice grain length",
+    "rice_drought_tolerance": "rice drought tolerance",
+    "rice_blast_resistance": "rice blast resistance",
+}
+
+
 def extract_keywords_from_knowledge(
     traits: list,
     correlations: Optional[list] = None,
     constraints: Optional[list] = None,
     max_keywords: int = 10,
 ) -> list[str]:
-    """
-    从知识库中提取高频关键词用于论文检索。
-
-    从 trait 的 name、category 和 tags 中提取关键词，
-    按类别分组后每类取前几个，保证检索覆盖面。
-    """
+    """从性状 id 映射英文检索词；没有映射的跳过中文短名。"""
     keywords: list[str] = []
     seen: set[str] = set()
 
-    # 1. 从性状名称提取（核心词）
+    def add(term: str) -> None:
+        term = (term or "").strip()
+        if not term or term in seen:
+            return
+        if any("\u4e00" <= ch <= "\u9fff" for ch in term):
+            return
+        seen.add(term)
+        keywords.append(term)
+
     for t in traits:
-        name = getattr(t, "name", None) or (isinstance(t, dict) and t.get("name", ""))
-        if name and name not in seen:
-            seen.add(name)
-            # 简短名称直接作为关键词
-            if len(name) <= 8:
-                keywords.append(name)
+        tid = getattr(t, "id", None) or (isinstance(t, dict) and t.get("id")) or ""
+        add(TRAIT_SEARCH_EN.get(str(tid), ""))
 
-    # 2. 按分类分组提取代表性关键词（避免同类重复）
-    categories: dict[str, list[str]] = {}
-    for t in traits:
-        cat = getattr(t, "category", None) or (isinstance(t, dict) and t.get("category", ""))
-        name = getattr(t, "name", None) or (isinstance(t, dict) and t.get("name", ""))
-        if cat and name:
-            categories.setdefault(cat, []).append(name)
-
-    for cat, names in categories.items():
-        if cat not in seen:
-            seen.add(cat)
-            keywords.append(cat)
-        # 每类最多补 2 个关键词
-        added = 0
-        for name in names:
-            if added >= 2:
-                break
-            if name not in seen and len(name) <= 10:
-                seen.add(name)
-                keywords.append(name)
-                added += 1
-
-    # 3. 从 tags 补充
-    for t in traits:
-        tags = getattr(t, "tags", None) or (isinstance(t, dict) and t.get("tags", []))
-        if tags:
-            for tag in tags:
-                if tag not in seen and len(tag) <= 8:
-                    seen.add(tag)
-                    keywords.append(tag)
-
-    # 4. 限制数量，优先保留核心性状名称
+    add("rice breeding")
+    add("Oryza sativa")
     if len(keywords) > max_keywords:
         keywords = keywords[:max_keywords]
-
     logger.info(f"从知识库提取了 {len(keywords)} 个关键词: {keywords}")
     return keywords
 

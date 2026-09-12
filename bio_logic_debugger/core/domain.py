@@ -358,8 +358,19 @@ class ValidationReport:
 
     def add_violation(self, v: Violation) -> None:
         self.violations.append(v)
-        if v.severity in (ConstraintSeverity.FATAL, ConstraintSeverity.SEVERE):
+        if v.severity == ConstraintSeverity.FATAL:
             self.passed = False
+
+    def verdict(self) -> str:
+        """给非专业用户的结论。只有 FATAL 才否定推进。"""
+        if any(v.severity == ConstraintSeverity.FATAL for v in self.violations):
+            return "不建议按原目标推进"
+        if (
+            any(v.severity == ConstraintSeverity.SEVERE for v in self.violations)
+            or self.matched_anti_patterns
+        ):
+            return "谨慎推进"
+        return "可以推进"
 
     def summary(self) -> dict:
         """返回报告的摘要字典，便于序列化"""
@@ -379,7 +390,7 @@ class ValidationReport:
         """生成完整的顾问式叙事报告"""
         lines = [f"# 育种目标验证报告：{self.goal.name}"]
         lines.append(f"物种：{self.goal.species}")
-        lines.append(f"结论：{'✅ 可以推进' if self.passed else '❌ 建议重新评估'}")
+        lines.append(f"结论：{self.verdict()}")
         lines.append("")
 
         if self.violations:

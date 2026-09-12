@@ -149,10 +149,13 @@ def render(engine: BioLogicEngine) -> None:
             st.info("左侧设定目标后点击「运行验证」")
         else:
             report = st.session_state.last_report
-            if report.passed:
-                st.success("✅ 可以推进")
+            verdict = report.verdict()
+            if verdict == "可以推进":
+                st.success(f"✅ {verdict}")
+            elif verdict == "谨慎推进":
+                st.warning(f"⚠️ {verdict}")
             else:
-                st.error("❌ 建议重新评估")
+                st.error(f"❌ {verdict}")
             summary = report.summary()
             mc1, mc2, mc3, mc4 = st.columns(4)
             mc1.metric("致命", summary["fatal"], border=True)
