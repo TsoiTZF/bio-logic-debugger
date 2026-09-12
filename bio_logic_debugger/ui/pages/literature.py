@@ -447,11 +447,14 @@ def render(engine: BioLogicEngine) -> None:
         st.caption("调整每条知识对验证结果的影响程度。降低不可靠知识的权重可减少误报。")
 
         user_weights = load_user_weights()
+        # expander 折叠时内部 widget 可能不进 session_state，保存必须先有这些字典。
+        trait_weights: dict[str, float] = {}
+        corr_weights: dict[str, float] = {}
+        cstr_weights: dict[str, float] = {}
 
         # 性状权重
         with st.expander(f"🧬 性状权重（{len(engine.trait_ids())} 条）"):
             st.caption("低置信度的性状，其范围越界警告将降级为 INFO")
-            trait_weights = {}
             for t in sorted(engine.iter_traits(), key=lambda x: x.id):
                 tid = t.id
                 default_conf = user_weights.get("traits", {}).get(tid, t.confidence)
@@ -466,7 +469,6 @@ def render(engine: BioLogicEngine) -> None:
         # 关联权重
         with st.expander(f"🔗 关联权重（{len(engine.iter_correlations())} 条）"):
             st.caption("低置信度的关联，验证时有效强度降低，警告等级相应降级")
-            corr_weights = {}
             for c in engine.iter_correlations():
                 name_a = engine.trait_name(c.trait_a)
                 name_b = engine.trait_name(c.trait_b)
@@ -483,7 +485,6 @@ def render(engine: BioLogicEngine) -> None:
         # 约束权重
         with st.expander(f"📜 约束权重（{len(engine.iter_constraints())} 条）"):
             st.caption("低置信度的约束，违反时严重等级自动降级")
-            cstr_weights = {}
             for c in engine.iter_constraints():
                 default_conf = user_weights.get("constraints", {}).get(c.id, c.confidence)
                 w = st.slider(
@@ -500,26 +501,34 @@ def render(engine: BioLogicEngine) -> None:
             merged_weights.setdefault("traits", {})
             merged_weights.setdefault("correlations", {})
             merged_weights.setdefault("constraints", {})
+            # 未展开 expander 时滑条不进 session_state，只覆盖实际出现过的 widget
+            for key, val in list(st.session_state.items()):
+                if not isinstance(key, str) or not isinstance(val, (int, float)):
+                    continue
+                if key.startswith("wt_trait_"):
+                    tid = key[len("wt_trait_"):]
+                    if val == 1.0:
+                        merged_weights["traits"].pop(tid, None)
+                    else:
+                        merged_weights["traits"][tid] = float(val)
+                elif key.startswith("wt_corr_"):
+                    cid = key[len("wt_corr_"):]
+                    if val == 1.0:
+                        merged_weights["correlations"].pop(cid, None)
+                    else:
+                        merged_weights["correlations"][cid] = float(val)
+                elif key.startswith("wt_cstr_"):
+                    cid = key[len("wt_cstr_"):]
+                    if val == 1.0:
+                        merged_weights["constraints"].pop(cid, None)
+                    else:
+                        merged_weights["constraints"][cid] = float(val)
             for tid, w in trait_weights.items():
                 merged_weights["traits"][tid] = w
             for key, w in corr_weights.items():
                 merged_weights["correlations"][key] = w
             for cid, w in cstr_weights.items():
                 merged_weights["constraints"][cid] = w
-            # 已渲染滑条设回 1.0 时删除覆盖
-            for t in engine.iter_traits():
-                skey = f"wt_trait_{t.id}"
-                if skey in st.session_state and st.session_state[skey] == 1.0:
-                    merged_weights["traits"].pop(t.id, None)
-            for c in engine.iter_correlations():
-                key = f"{c.trait_a}__{c.trait_b}" if c.trait_a < c.trait_b else f"{c.trait_b}__{c.trait_a}"
-                skey = f"wt_corr_{key}"
-                if skey in st.session_state and st.session_state[skey] == 1.0:
-                    merged_weights["correlations"].pop(key, None)
-            for c in engine.iter_constraints():
-                skey = f"wt_cstr_{c.id}"
-                if skey in st.session_state and st.session_state[skey] == 1.0:
-                    merged_weights["constraints"].pop(c.id, None)
             save_user_weights(merged_weights)
             st.cache_resource.clear()
             st.success("✅ 权重已保存，引擎已重新加载！")
@@ -561,6 +570,5 @@ def render(engine: BioLogicEngine) -> None:
 
         st.markdown("---")
         st.markdown(
-            "💡 **提示**：每次启动 app 时会自动从社区仓库同步最新知识库。"
-            "你也可以在「知识库管理」Tab 中手动触发同步。"
+            "💡 **提示**：启动时不会自动覆盖知识库。需要更新时，在侧边栏或本页点「检查更新 / 手动同步」。"
         )
