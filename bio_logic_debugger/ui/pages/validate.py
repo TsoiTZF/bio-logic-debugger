@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import streamlit as st
 
 from bio_logic_debugger.core.domain import (
@@ -12,7 +14,29 @@ from bio_logic_debugger.core.engine import BioLogicEngine
 from bio_logic_debugger.ui.runtime import trait_label
 
 
+def _load_demo_goal(engine: BioLogicEngine) -> None:
+    """软著截图用：BIO_LOGIC_DEMO=1 时预填高秆+高抗示例并跑一次验证。"""
+    if os.environ.get("BIO_LOGIC_DEMO") != "1":
+        return
+    if "goal_targets" not in st.session_state:
+        st.session_state.goal_targets = [
+            {"trait_id": "rice_plant_height", "direction": ">=", "value": 130.0, "priority": 8},
+            {"trait_id": "rice_lodging_resistance", "direction": "<=", "value": 2.0, "priority": 8},
+        ]
+    if "last_report" not in st.session_state:
+        goal = BreedingGoal(name="高秆高抗示例", species="水稻")
+        for tgt in st.session_state.goal_targets:
+            goal.add_target(TraitTarget(
+                trait_id=tgt["trait_id"],
+                desired_value=tgt["value"],
+                direction=tgt["direction"],
+                priority=tgt["priority"],
+            ))
+        st.session_state.last_report = engine.validate(goal)
+
+
 def render(engine: BioLogicEngine) -> None:
+    _load_demo_goal(engine)
     st.title("🎯 育种目标验证")
     st.markdown("设定育种目标，系统会检查拮抗关系、生理约束和已知反模式。")
 
