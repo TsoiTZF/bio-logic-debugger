@@ -200,6 +200,7 @@ def anti_pattern_to_dict(ap: AntiPattern) -> dict:
         "name": ap.name,
         "description": ap.description,
         "trigger_traits": ap.trigger_traits,
+        "trigger_intents": dict(ap.trigger_intents or {}),
         "severity": ap.severity.name,
         "historical_examples": ap.historical_examples,
         "failed_approaches": [
@@ -226,6 +227,7 @@ def anti_pattern_from_dict(d: dict) -> AntiPattern:
         name=d["name"],
         description=d.get("description", ""),
         trigger_traits=d.get("trigger_traits", []),
+        trigger_intents=dict(d.get("trigger_intents") or {}),
         severity=ConstraintSeverity[d.get("severity", "WARNING")],
         historical_examples=d.get("historical_examples", []),
         failed_approaches=[

@@ -217,6 +217,8 @@ class AntiPattern:
     name: str
     description: str
     trigger_traits: list[str]        # 相关的 trait id 列表
+    # trait_id -> better/worse/any；空则只看性状是否出现
+    trigger_intents: dict[str, str] = field(default_factory=dict)
     severity: ConstraintSeverity = ConstraintSeverity.WARNING
     historical_examples: list[str] = field(default_factory=list)
     failed_approaches: list[FailedApproach] = field(default_factory=list)

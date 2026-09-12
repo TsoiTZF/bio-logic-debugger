@@ -1,0 +1,83 @@
+from bio_logic_debugger.core.domain import (
+    BreedingGoal,
+    ConstraintSeverity,
+    CorrelationType,
+    Trait,
+    TraitCorrelation,
+    TraitTarget,
+)
+from bio_logic_debugger.core.engine import BioLogicEngine
+from bio_logic_debugger.knowledge.rice_knowledge import ANTI_PATTERNS, CONSTRAINTS, CORRELATIONS, TRAITS
+
+
+def _rice() -> BioLogicEngine:
+    engine = BioLogicEngine()
+    engine.register_traits(TRAITS)
+    engine.register_correlations(CORRELATIONS)
+    engine.register_constraints(CONSTRAINTS)
+    engine.register_anti_patterns(ANTI_PATTERNS)
+    return engine
+
+
+def test_builtin_tall_high_resist_is_fatal_weak_is_not():
+    engine = _rice()
+    resist = BreedingGoal(name="高秆高抗")
+    resist.add_target(TraitTarget("rice_plant_height", 130, ">="))
+    resist.add_target(TraitTarget("rice_lodging_resistance", 2, "<="))
+    report = engine.validate(resist)
+    assert any(v.constraint_id == "rice_not_both_tall_and_lodging_free" for v in report.violations)
+
+    weak = BreedingGoal(name="高秆易倒")
+    weak.add_target(TraitTarget("rice_plant_height", 130, ">="))
+    weak.add_target(TraitTarget("rice_lodging_resistance", 8, ">="))
+    report = engine.validate(weak)
+    assert not any(v.constraint_id == "rice_not_both_tall_and_lodging_free" for v in report.violations)
+
+
+def test_indica_quality_is_not_low_quality_trap():
+    engine = _rice()
+    goal = BreedingGoal(name="优质籼稻")
+    goal.add_target(TraitTarget("rice_yield_per_mu", 650, ">="))
+    goal.add_target(TraitTarget("rice_grain_length", 7.5, ">="))
+    goal.add_target(TraitTarget("rice_amylose_content", 26, ">="))
+    report = engine.validate(goal)
+    assert not any(p.id == "rice_high_yield_low_quality" for p in report.matched_anti_patterns)
+
+
+def test_high_yield_short_grain_low_amylose_hits_trap():
+    engine = _rice()
+    goal = BreedingGoal(name="高产短粒低直链")
+    goal.add_target(TraitTarget("rice_yield_per_mu", 800, ">="))
+    goal.add_target(TraitTarget("rice_grain_length", 4.5, "<="))
+    goal.add_target(TraitTarget("rice_amylose_content", 8, "<="))
+    report = engine.validate(goal)
+    assert any(p.id == "rice_high_yield_low_quality" for p in report.matched_anti_patterns)
+
+
+def test_correlation_respects_confidence_weight():
+    engine = BioLogicEngine()
+    engine.register_traits([
+        Trait("a", "A", "", "产量", "g", (0.0, 100.0)),
+        Trait("b", "B", "", "品质", "%", (0.0, 100.0)),
+    ])
+    engine.register_correlation(TraitCorrelation(
+        trait_a="a", trait_b="b",
+        corr_type=CorrelationType.NEGATIVE,
+        strength=-0.8, confidence=0.1,
+        mechanism="低置信",
+    ))
+    goal = BreedingGoal(name="双高低权")
+    goal.add_target(TraitTarget("a", 80, ">="))
+    goal.add_target(TraitTarget("b", 80, ">="))
+    report = engine.validate(goal)
+    assert not any(v.constraint_id.startswith("corr.") for v in report.violations)
+
+    engine.register_correlation(TraitCorrelation(
+        trait_a="a", trait_b="b",
+        corr_type=CorrelationType.NEGATIVE,
+        strength=-0.8, confidence=1.0,
+        mechanism="高置信",
+    ))
+    report = engine.validate(goal)
+    assert any(v.constraint_id.startswith("corr.") for v in report.violations)
+    assert all(v.severity == ConstraintSeverity.WARNING for v in report.violations if v.constraint_id.startswith("corr."))

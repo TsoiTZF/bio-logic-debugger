@@ -135,6 +135,10 @@ class BioLogicEngine:
 
     def register_anti_pattern(self, pattern: AntiPattern) -> None:
         pattern.trigger_traits = [self.canonical_id(t) for t in pattern.trigger_traits]
+        if pattern.trigger_intents:
+            pattern.trigger_intents = {
+                self.canonical_id(k): v for k, v in pattern.trigger_intents.items()
+            }
         self._anti_patterns.register(pattern)
 
     def register_anti_patterns(self, patterns: list[AntiPattern]) -> None:
@@ -184,10 +188,13 @@ class BioLogicEngine:
           3. （可选）调用 LLM 推理
           4. 生成最终报告
         """
-        for target in goal.targets:
-            target.trait_id = self.canonical_id(target.trait_id)
+        from dataclasses import replace
+        work = replace(
+            goal,
+            targets=[replace(t, trait_id=self.canonical_id(t.trait_id)) for t in goal.targets],
+        )
         ctx = ValidationContext(
-            goal=goal,
+            goal=work,
             trait_map={k: v for k, v in self._traits.items()},
         )
 
@@ -296,10 +303,13 @@ class BioLogicEngine:
                     continue
 
                 if user_wants_both_high:
+                    effective = abs(corr.strength) * corr.confidence
+                    if effective < 0.2:
+                        continue
                     # 负相关是权衡，不是生理不可能。最高只给 WARNING。
                     narrative_parts = [
                         f"在「{tname_a}」和「{tname_b}」之间存在一个已知的{self._corr_type_label(corr)}关系",
-                        f"（相关系数 r = {corr.strength:.2f}，置信度 {corr.confidence:.2f}）。",
+                        f"（r = {corr.strength:.2f}，置信度 {corr.confidence:.2f}，有效强度 {effective:.2f}）。",
                     ]
                     if corr.mechanism:
                         narrative_parts.append(f"\n\n背后的生理机制：{corr.mechanism}")
@@ -392,7 +402,10 @@ class BioLogicEngine:
 
     def _layer_anti_pattern_match(self, ctx: ValidationContext) -> ValidationContext:
         """反模式匹配层"""
-        matches = self._anti_patterns.match(ctx.goal)
+        matches = [
+            m for m in self._anti_patterns.match(ctx.goal)
+            if self._intents_ok(ctx, m.anti_pattern)
+        ]
 
         for m in matches:
             pattern = m.anti_pattern
@@ -448,6 +461,24 @@ class BioLogicEngine:
         return ctx
 
     # -------- 工具方法 --------
+
+    def _intents_ok(self, ctx: ValidationContext, pattern: AntiPattern) -> bool:
+        intents = pattern.trigger_intents or {}
+        if not intents:
+            return True
+        for raw_id, intent in intents.items():
+            tid = self.canonical_id(raw_id)
+            intent = (intent or "any").lower()
+            if intent in ("", "any"):
+                continue
+            target = self._find_target(ctx.goal, tid)
+            trait = ctx.trait_map.get(tid)
+            better = self._wants_high(target, trait)
+            if intent == "better" and not better:
+                return False
+            if intent == "worse" and (target is None or better):
+                return False
+        return True
 
     def _find_target(self, goal: BreedingGoal, trait_id: str) -> Optional[TraitTarget]:
         for t in goal.targets:

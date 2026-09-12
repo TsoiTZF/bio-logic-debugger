@@ -13,7 +13,7 @@
         "level": "CONFIRMED",
         "source": "Yoshida, 1981, Fundamentals of Rice Crop Science",
         "description": "经典教材中的源-库理论",
-        "url": "https://www.irri.org/resources/publications",
+        "url": "",
         "year": 1981
       },
       {
@@ -158,7 +158,7 @@
         "source": "Chalk5 基因研究",
         "description": "垩白形成与灌浆物质分配相关",
         "url": "https://doi.org/10.1038/ng.2923",
-        "year": 0
+        "year": 2014
       }
     ]
   },
@@ -233,7 +233,7 @@
         "level": "CONFIRMED",
         "source": "IRRI 稻米品质评价标准",
         "description": "国际水稻研究所标准",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       },
       {
@@ -266,7 +266,7 @@
         "level": "STRONG",
         "source": "IRRI 品质评价体系",
         "description": "直链淀粉与糊化温度的负相关",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       }
     ]
@@ -311,7 +311,7 @@
         "level": "STRONG",
         "source": "中国优质稻谷标准 GB/T 17891",
         "description": "垩白度和整精米率均为重要品质指标",
-        "url": "https://openstd.samr.gov.cn/bzgk/gb/std_list",
+        "url": "",
         "year": 0
       }
     ]
@@ -364,7 +364,7 @@
         "source": "sd1 基因功能研究",
         "description": "sd1 降低株高 20-30%，显著提高抗倒伏性",
         "url": "https://doi.org/10.1073/pnas.132266399",
-        "year": 0
+        "year": 2002
       }
     ]
   },
@@ -382,7 +382,7 @@
         "level": "CONFIRMED",
         "source": "IRRI 株型育种理论",
         "description": "动态株型概念",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       },
       {
@@ -588,7 +588,7 @@
         "level": "STRONG",
         "source": "IRRI 耐旱育种研究",
         "description": "耐旱性与产量的权衡关系",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       },
       {
@@ -615,13 +615,13 @@
         "source": "DRO1 基因研究",
         "description": "深根基因 DRO1 提高耐旱性",
         "url": "https://doi.org/10.1038/ng.2725",
-        "year": 0
+        "year": 2013
       },
       {
         "level": "STRONG",
         "source": "IRRI 根系研究",
         "description": "根系深度与耐旱性的正相关",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       }
     ]

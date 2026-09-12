@@ -1,12 +1,12 @@
 [
   {
     "id": "rice_not_both_tall_and_lodging_free",
-    "name": "株高与抗倒伏的不可兼得",
-    "description": "高度超过 120cm 的品种几乎不可能具有高抗倒伏性（>7级）。",
+    "name": "高秆与高抗倒伏不可兼得",
+    "description": "株高超过 120cm 同时达到 SES 高抗倒伏（1–3 级）几乎不可能。SES：1 优/抗，9 劣/感。高秆且易倒（≥7 级）符合力学，不视为该 FATAL。",
     "severity": "FATAL",
     "scope": "SPECIES",
     "species": "水稻",
-    "condition_expr": "$rice_plant_height > 120 AND $rice_lodging_resistance >= 7",
+    "condition_expr": "$rice_plant_height > 120 AND $rice_lodging_resistance <= 3",
     "consequence": "超出茎秆力学的物理极限，倒伏风险极高。倒伏可导致产量损失 25-80%。",
     "confidence": 0.9,
     "tags": [],
@@ -23,7 +23,7 @@
         "source": "sd1 基因研究",
         "description": "半矮秆基因提高抗倒伏性的机制",
         "url": "https://doi.org/10.1073/pnas.132266399",
-        "year": 0
+        "year": 2002
       },
       {
         "level": "STRONG",
@@ -64,7 +64,7 @@
         "level": "CONFIRMED",
         "source": "IRRI 品质评价标准",
         "description": "直链淀粉与胶稠度的对应关系",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       }
     ]
@@ -164,7 +164,7 @@
         "level": "STRONG",
         "source": "中国优质稻谷标准 GB/T 17891",
         "description": "垩白度和整精米率的品质要求",
-        "url": "https://openstd.samr.gov.cn/bzgk/gb/std_list",
+        "url": "",
         "year": 0
       }
     ]
@@ -203,11 +203,11 @@
   {
     "id": "rice_drought_severe_yield_loss",
     "name": "严重干旱的产量损失下限",
-    "description": "在严重干旱胁迫下（土壤水势 < -1.5 MPa），即使是最耐旱的品种，产量损失也不可能低于 30%。",
+    "description": "严重干旱下，即使 SES 耐旱达 1–3 级（高抗），产量损失也很难低于约 30%。",
     "severity": "FATAL",
     "scope": "SPECIES",
     "species": "水稻",
-    "condition_expr": "$rice_drought_tolerance >= 8 AND $drought_severity = 'severe'",
+    "condition_expr": "$rice_drought_tolerance <= 3 AND $drought_severity = 'severe'",
     "consequence": "严重干旱导致光合作用停止、叶片卷曲、籽粒灌浆终止，产量损失不可避免。",
     "confidence": 0.85,
     "tags": [
@@ -219,7 +219,7 @@
         "level": "STRONG",
         "source": "IRRI 耐旱研究",
         "description": "严重干旱下的产量损失数据",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       },
       {
@@ -234,11 +234,11 @@
   {
     "id": "rice_cold_tropical",
     "name": "热带品种的耐冷限制",
-    "description": "纯热带血统的品种（无耐冷基因导入）在低于 15°C 的环境下几乎无法正常结实。",
+    "description": "SES 耐冷 7–9 级（敏感）的材料在低于 15°C 时几乎无法正常结实。1–3 级为高抗，不触发本条。",
     "severity": "FATAL",
     "scope": "SUBSPECIES",
     "species": "水稻",
-    "condition_expr": "$rice_cold_tolerance <= 3 AND $temperature < 15",
+    "condition_expr": "$rice_cold_tolerance >= 7 AND $temperature < 15",
     "consequence": "低温导致花粉活力下降、授粉受精失败、籽粒灌浆停止。",
     "confidence": 0.8,
     "tags": [

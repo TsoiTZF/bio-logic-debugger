@@ -83,7 +83,12 @@
         "url": "",
         "year": 2023
       }
-    ]
+    ],
+    "trigger_intents": {
+      "rice_yield_per_mu": "better",
+      "rice_grain_length": "worse",
+      "rice_amylose_content": "worse"
+    }
   },
   {
     "id": "rice_extreme_grain_type",
@@ -307,7 +312,7 @@
         "level": "SUGGESTED",
         "source": "IRRI 部分多抗品系田间数据",
         "description": "多抗品系产量缺陷观察",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       },
       {
@@ -377,7 +382,7 @@
         "level": "STRONG",
         "source": "IRRI 耐旱育种研究",
         "description": "耐旱性与产量的权衡",
-        "url": "https://www.irri.org",
+        "url": "",
         "year": 0
       },
       {
@@ -392,7 +397,7 @@
         "source": "DRO1 基因研究",
         "description": "深根基因的产量代价",
         "url": "https://doi.org/10.1038/ng.2725",
-        "year": 2010
+        "year": 2013
       }
     ]
   },
@@ -439,13 +444,13 @@
         "source": "Chalk5 基因研究",
         "description": "垩白形成的分子机制",
         "url": "https://doi.org/10.1038/ng.2923",
-        "year": 0
+        "year": 2014
       },
       {
         "level": "STRONG",
         "source": "中国优质稻谷标准 GB/T 17891",
         "description": "垩白度的品质分级标准",
-        "url": "https://openstd.samr.gov.cn/bzgk/gb/std_list",
+        "url": "",
         "year": 0
       },
       {

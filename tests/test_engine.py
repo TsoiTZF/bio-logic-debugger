@@ -17,7 +17,7 @@ def _engine() -> BioLogicEngine:
         Trait("rice_yield_per_plant", "单株产量", "", "产量", "g", (10.0, 80.0)),
         Trait("rice_amylose_content", "直链淀粉含量", "", "品质", "%", (0.0, 33.0)),
         Trait("rice_plant_height", "株高", "", "株型", "cm", (60.0, 150.0)),
-        Trait("rice_lodging_resistance", "抗倒伏性", "", "抗逆", "级", (1.0, 9.0)),
+        Trait("rice_lodging_resistance", "抗倒伏性", "", "抗逆", "级", (1.0, 9.0), higher_is_better=False),
         Trait("rice_heading_days", "抽穗天数", "", "生育期", "天", (60.0, 180.0)),
         Trait("rice_gel_consistency", "胶稠度", "", "品质", "mm", (26.0, 100.0)),
     ])
@@ -34,7 +34,7 @@ def _engine() -> BioLogicEngine:
         name="株高与抗倒伏的不可兼得",
         description="高度超过 120cm 且高抗倒伏",
         severity=ConstraintSeverity.FATAL,
-        condition_expr="$rice_plant_height > 120 AND $rice_lodging_resistance >= 7",
+        condition_expr="$rice_plant_height > 120 AND $rice_lodging_resistance <= 3",
         confidence=0.9,
     ))
     engine.register_constraint(BiologicalConstraint(
@@ -111,21 +111,22 @@ def test_range_direction_is_not_automatically_high():
 
 def test_constraint_fires_only_when_condition_holds():
     engine = _engine()
-    tall = BreedingGoal(name="又高又抗倒", species="水稻")
-    tall.add_target(TraitTarget("rice_plant_height", desired_value=130, direction=">="))
-    tall.add_target(TraitTarget("rice_lodging_resistance", desired_value=8, direction=">="))
-    report = engine.validate(tall)
+    # SES：1 抗 9 感。高秆+真高抗（≤3）才是 FATAL；高秆+易倒（≥7）不触发。
+    tall_resist = BreedingGoal(name="高秆高抗", species="水稻")
+    tall_resist.add_target(TraitTarget("rice_plant_height", desired_value=130, direction=">="))
+    tall_resist.add_target(TraitTarget("rice_lodging_resistance", desired_value=2, direction="<="))
+    report = engine.validate(tall_resist)
     assert any(v.constraint_id == "rice_not_both_tall_and_lodging_free" for v in report.violations)
+
+    tall_weak = BreedingGoal(name="高秆易倒", species="水稻")
+    tall_weak.add_target(TraitTarget("rice_plant_height", desired_value=130, direction=">="))
+    tall_weak.add_target(TraitTarget("rice_lodging_resistance", desired_value=8, direction=">="))
+    report = engine.validate(tall_weak)
+    assert not any(v.constraint_id == "rice_not_both_tall_and_lodging_free" for v in report.violations)
 
     only_tall = BreedingGoal(name="只高", species="水稻")
     only_tall.add_target(TraitTarget("rice_plant_height", desired_value=130, direction=">="))
     report = engine.validate(only_tall)
-    assert not any(v.constraint_id == "rice_not_both_tall_and_lodging_free" for v in report.violations)
-
-    short = BreedingGoal(name="矮秆抗倒", species="水稻")
-    short.add_target(TraitTarget("rice_plant_height", desired_value=90, direction="<="))
-    short.add_target(TraitTarget("rice_lodging_resistance", desired_value=8, direction=">="))
-    report = engine.validate(short)
     assert not any(v.constraint_id == "rice_not_both_tall_and_lodging_free" for v in report.violations)
 
 

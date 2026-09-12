@@ -5,6 +5,15 @@ All notable changes to Bio-Logic Debugger will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.6] - 2026-09-12
+
+### Fixed
+- SES 约束按 1 抗 9 感改方向：高秆+真高抗才 FATAL，高秆+易倒不触发
+- 反模式可声明 better/worse 意图；优质籼稻（高产+长粒+高直链）不再打成高产低质
+- 关联层用 |r|×confidence，权重滑条能关掉弱拮抗
+- validate() 不再改写调用方的 trait_id
+- 证据 URL 去掉官网首页/检索页；DOI 年份与文献对齐
+
 ## [0.2.5] - 2026-09-12
 
 ### Changed

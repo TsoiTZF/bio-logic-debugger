@@ -18,7 +18,7 @@ def test_legacy_yield_id_resolves():
     goal = BreedingGoal(name="旧id")
     goal.add_target(TraitTarget("rice_yield_per_ha", desired_value=400, direction=">="))
     engine.validate(goal)
-    assert goal.targets[0].trait_id == "rice_yield_per_mu"
+    assert goal.targets[0].trait_id == "rice_yield_per_ha"
 
 
 def test_some_evidence_has_real_urls():
