@@ -1,10 +1,11 @@
-"""启动 Streamlit 并截界面。失败不阻断源程序 PDF。"""
+"""启动 Streamlit，逐页截界面。"""
 from __future__ import annotations
 
 import os
 import subprocess
 import sys
 import time
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,11 +13,29 @@ SHOT = ROOT / "docs" / "ruanzhu" / "screenshots"
 URL = "http://127.0.0.1:8511"
 
 
+def wait_health() -> bool:
+    for _ in range(60):
+        try:
+            urllib.request.urlopen(URL + "/_stcore/health", timeout=1)
+            return True
+        except Exception:
+            time.sleep(0.5)
+    return False
+
+
+def snap(page, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        page.locator("html").screenshot(path=str(path), timeout=20000)
+    except Exception:
+        page.screenshot(path=str(path), timeout=20000, animations="disabled")
+
+
 def main() -> int:
     SHOT.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env["BIO_LOGIC_DEMO"] = "1"
-    env["BROWSER"] = "none"
+    log = open(SHOT / "streamlit.log", "w", encoding="utf-8")
     proc = subprocess.Popen(
         [
             sys.executable, "-m", "streamlit", "run",
@@ -27,56 +46,58 @@ def main() -> int:
         ],
         cwd=str(ROOT),
         env=env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=log,
+        stderr=log,
     )
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        print("未安装 playwright，跳过界面截图")
+        print("未安装 playwright")
         proc.terminate()
         return 1
+    if not wait_health():
+        print("Streamlit 未起来")
+        proc.terminate()
+        return 1
+
+    jobs = [
+        (None, "01-home.png"),
+        (None, "03-sidebar.png"),
+        (None, "04-targets.png"),
+        (None, "05-ui-result.png"),
+        (None, "06-violation.png"),
+        ("性状浏览器", "07-browser.png"),
+        ("反模式库", "08-anti-patterns.png"),
+        ("约束规则", "09-constraints.png"),
+        ("文献与知识库", "10-literature.png"),
+        ("文献与知识库", "12-knowledge.png"),
+    ]
     try:
-        for _ in range(40):
-            time.sleep(0.5)
-            try:
-                import urllib.request
-                urllib.request.urlopen(URL + "/_stcore/health", timeout=1)
-                break
-            except Exception:
-                continue
-        else:
-            print("Streamlit 未起来")
-            return 1
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--disable-gpu", "--disable-dev-shm-usage", "--no-sandbox"],
+            )
             page = browser.new_page(viewport={"width": 1440, "height": 900})
             page.goto(URL, wait_until="domcontentloaded", timeout=60000)
-            page.wait_for_timeout(4000)
-            page.screenshot(path=str(SHOT / "01-home.png"))
-            page.screenshot(path=str(SHOT / "03-sidebar.png"))
-            page.screenshot(path=str(SHOT / "04-targets.png"))
-            page.screenshot(path=str(SHOT / "05-ui-result.png"))
-            page.screenshot(path=str(SHOT / "06-violation.png"))
-            for label, name in [
-                ("性状浏览器", "07-browser.png"),
-                ("反模式库", "08-anti-patterns.png"),
-                ("约束规则", "09-constraints.png"),
-                ("文献与知识库", "10-literature.png"),
-            ]:
-                try:
-                    loc = page.get_by_text(label, exact=False).first
-                    loc.click(timeout=10000)
-                    page.wait_for_timeout(2500)
-                    page.screenshot(path=str(SHOT / name))
-                except Exception as exc:
-                    print("跳过", name, exc)
+            page.wait_for_timeout(5000)
+            last = None
+            for label, name in jobs:
+                if label and label != last:
+                    page.get_by_text(label, exact=False).first.click(timeout=15000)
+                    page.wait_for_timeout(3000)
+                    last = label
+                snap(page, SHOT / name)
+                print("ok", name)
+            # 文献页点到知识库 tab
             try:
-                page.screenshot(path=str(SHOT / "12-knowledge.png"))
-            except Exception:
-                pass
+                page.get_by_text("知识库", exact=False).first.click(timeout=8000)
+                page.wait_for_timeout(2000)
+                snap(page, SHOT / "12-knowledge.png")
+                print("ok 12-knowledge.png")
+            except Exception as exc:
+                print("知识库 tab", exc)
             browser.close()
-        print("界面截图已写入", SHOT)
         return 0
     finally:
         proc.terminate()
@@ -84,6 +105,7 @@ def main() -> int:
             proc.wait(timeout=8)
         except Exception:
             proc.kill()
+        log.close()
 
 
 if __name__ == "__main__":
