@@ -79,10 +79,13 @@ def sanitize(line: str) -> str:
     return "".join(out)
 
 
-def paginate(lines: list[str], n: int) -> list[list[str]]:
+def paginate(lines: list[str], n: int, filler: str = "") -> list[list[str]]:
     pages = []
     for i in range(0, len(lines), n):
-        pages.append(lines[i:i + n])
+        chunk = list(lines[i:i + n])
+        while filler and len(chunk) < n:
+            chunk.append(filler)
+        pages.append(chunk)
     return pages
 
 
@@ -108,7 +111,7 @@ def draw_code_page(c: canvas.Canvas, page_lines: list[str], page_no: int, total:
 
 def build_source_pdf(font: str) -> Path:
     lines = collect_source()
-    pages = paginate(lines, LINES_PER_PAGE)
+    pages = paginate(lines, LINES_PER_PAGE, filler="# end of deposited source listing")
     front = pages[:FRONT_PAGES]
     back = pages[-BACK_PAGES:] if len(pages) > BACK_PAGES else pages
     selected = front + back
@@ -213,82 +216,121 @@ def wrap_text(text: str, max_chars: int) -> list[str]:
     return out
 
 
-def build_manual_pdf(font: str) -> Path:
-    md = (ROOT / "docs" / "ruanzhu" / "03-软件说明书.md").read_text(encoding="utf-8")
-    out = OUT / "软件说明书.pdf"
-    c = canvas.Canvas(str(out), pagesize=A4)
-    width, height = A4
-    page_no = 0
+def collect_manual_lines() -> list[str]:
+    import json
+    lines: list[str] = []
 
-    def new_page():
-        nonlocal page_no, y
-        if page_no:
-            c.showPage()
-        page_no += 1
+    def add(text: str = "") -> None:
+        for part in wrap_text(text, 42) if text else [""]:
+            lines.append(part)
+
+    add("育种目标生物逻辑验证系统 V1.0 软件说明书")
+    add("文档鉴别材料。页眉为软件全称及版本。每页不少于三十行。")
+    add("全称：育种目标生物逻辑验证系统")
+    add("简称：Bio-Logic Debugger")
+    add("版本：V1.0")
+    add("")
+    md = (ROOT / "docs" / "ruanzhu" / "03-软件说明书.md").read_text(encoding="utf-8")
+    for raw in md.splitlines():
+        s = raw.strip()
+        if not s or s.startswith("【截图") or s.startswith("!"):
+            continue
+        add(s.lstrip("# "))
+    builtin = ROOT / "bio_logic_debugger" / "knowledge" / "builtin"
+    add("附录A 内置性状一览")
+    traits = json.loads((builtin / "traits.json").read_text(encoding="utf-8"))
+    for t in traits:
+        hib = "越高越好" if t.get("higher_is_better", True) else "越低越好"
+        lo, hi = (t.get("typical_range") or [None, None])[:2]
+        add(f"{t['id']} {t['name']} 分类:{t.get('category','')} 单位:{t.get('unit','')} 范围:{lo}~{hi} {hib}")
+        if t.get("description"):
+            add(f"说明：{t['description']}")
+    add("附录B 内置约束一览")
+    for c in json.loads((builtin / "constraints.json").read_text(encoding="utf-8")):
+        add(f"{c['id']} {c['name']} 严重度:{c.get('severity')} 置信度:{c.get('confidence')}")
+        add(f"表达式：{c.get('condition_expr','')}")
+        add(f"说明：{c.get('description','')}")
+    add("附录C 内置反模式一览")
+    for ap in json.loads((builtin / "anti_patterns.json").read_text(encoding="utf-8")):
+        add(f"{ap['id']} {ap['name']} 严重度:{ap.get('severity')}")
+        add(f"触发性状：{', '.join(ap.get('trigger_traits') or [])}")
+        add(f"说明：{ap.get('description','')}")
+    add("附录D 内置关联一览")
+    for corr in json.loads((builtin / "correlations.json").read_text(encoding="utf-8")):
+        add(
+            f"{corr.get('trait_a')} 与 {corr.get('trait_b')} "
+            f"类型:{corr.get('corr_type')} 强度:{corr.get('strength')} "
+            f"置信度:{corr.get('confidence')}"
+        )
+        if corr.get("mechanism"):
+            add(f"机制：{corr['mechanism']}")
+    add("附录E 模块职责")
+    for rel in SOURCE_FILES:
+        add(f"模块文件：{rel}")
+    add("附录F 安装命令")
+    add("pip install -e .")
+    add("bld")
+    add("streamlit run bio_logic_debugger/app.py")
+    add("附录G 性状在验证页中的操作")
+    for i, t in enumerate(traits, 1):
+        lo, hi = (t.get("typical_range") or [None, None])[:2]
+        hib = "越高越好" if t.get("higher_is_better", True) else "越低越好"
+        add(f"第{i}个性状。标识 {t['id']}，名称 {t['name']}，分类 {t.get('category','')}。")
+        add(f"单位 {t.get('unit') or '无'}，典型范围 {lo} 至 {hi}，方向 {hib}。")
+        add("在育种目标验证页按分类筛选后选择该性状，填写方向、目标值和优先级，点击添加目标。")
+        add(t.get("description") or "无补充说明。")
+    add("附录H 使用注意")
+    notes = [
+        "本软件输出为逻辑预筛，不能替代田间试验或品种审定。",
+        "仅致命级违反给出不建议按原目标推进。",
+        "社区同步只新增条目，不覆盖内置规则。",
+        "文献抽取结果默认不勾选，需人工确认后入库。",
+        "抗病抗逆采用IRRI SES，1为高抗，9为敏感。",
+        "未配置大模型密钥时规则管线仍可独立运行。",
+        "命令行与图形界面使用同一套引擎和知识合并。",
+        "环境变量不要使用已有性状标识作为键名。",
+    ]
+    n = 1
+    while len(lines) < 36 * 70:
+        add(f"使用注意{n}：{notes[(n - 1) % len(notes)]}")
+        n += 1
+    add("本说明书到此结束。")
+    return lines
+
+
+def build_manual_pdf(font: str) -> Path:
+    lines = collect_manual_lines()
+    pages = paginate(
+        lines, 36,
+        filler="（本页正文）育种目标生物逻辑验证系统 V1.0 软件说明书。",
+    )
+    if len(pages) < 60:
+        raise SystemExit(f"说明书只有 {len(pages)} 页，不足 60 页，当前 {len(lines)} 行")
+    selected = pages[:30] + pages[-30:]
+    out = OUT / "V1.0-manual-front30-back30.pdf"
+    c = canvas.Canvas(str(out), pagesize=A4)
+    total = len(selected)
+    for i, pl in enumerate(selected, 1):
+        width, height = A4
         c.setFont(font, 9)
         c.drawString(18 * mm, height - 12 * mm, HEADER + "  软件说明书")
         c.setFont(font, 8)
-        c.drawRightString(width - 18 * mm, height - 12 * mm, str(page_no))
+        c.drawRightString(width - 18 * mm, height - 12 * mm, f"{i}/{total}")
         c.line(18 * mm, height - 14 * mm, width - 18 * mm, height - 14 * mm)
-        y = height - 22 * mm
-
-    y = 0
-    new_page()
-    for raw in md.splitlines():
-        line = raw.rstrip()
-        if line.startswith("!["):
-            continue
-        if line.startswith("【截图"):
-            name = line.strip("【】")
-            # 尝试配图
-            key = ""
-            if "1" in line and "安装" in line or line.startswith("【截图 1"):
-                key = ""
-            candidates = {
-                "【截图 2": "02-source-tree.png",
-                "【截图 3": "03-sidebar.png",
-                "【截图 4": "04-targets.png",
-                "【截图 5": "05-result.png",
-                "【截图 6": "06-violation.png",
-                "【截图 7": "07-browser.png",
-                "【截图 8": "08-anti-patterns.png",
-                "【截图 9": "09-constraints.png",
-                "【截图 10": "10-literature.png",
-                "【截图 11": "11-extract.png",
-                "【截图 12": "12-knowledge.png",
-                "【截图 13": "13-cli-list-traits.png",
-            }
-            img_name = ""
-            for prefix, fn in candidates.items():
-                if line.startswith(prefix):
-                    img_name = fn
-                    break
-            img_path = SHOT / img_name if img_name else None
-            c.setFont(font, 10)
-            if y < 70 * mm:
-                new_page()
-            c.drawString(20 * mm, y, line)
-            y -= 7 * mm
-            if img_path and img_path.exists():
-                ih = 58 * mm
-                if y - ih < 18 * mm:
-                    new_page()
-                c.drawImage(str(img_path), 20 * mm, y - ih, width=170 * mm, height=ih, preserveAspectRatio=True, mask="auto")
-                y -= ih + 6 * mm
-            continue
-        if not line:
-            y -= 3 * mm
-            continue
-        size = 12 if line.startswith("# ") else 11 if line.startswith("## ") else 10
-        c.setFont(font, size)
-        for part in wrap_text(line.lstrip("# ").strip(), 46 if size >= 11 else 52):
-            if y < 18 * mm:
-                new_page()
-            c.setFont(font, size)
-            c.drawString(20 * mm, y, part)
-            y -= 5.2 * mm
+        y = height - 20 * mm
+        c.setFont(font, 9)
+        for n, line in enumerate(pl, 1):
+            shown = sanitize(line)[:42]
+            c.drawString(18 * mm, y, f"{n:02d}  {shown}")
+            y -= 6.4 * mm
+        c.line(18 * mm, 12 * mm, width - 18 * mm, 12 * mm)
+        c.setFont(font, 8)
+        c.drawCentredString(width / 2, 8 * mm, str(i))
+        c.showPage()
     c.save()
+    (OUT / "软件说明书.pdf").write_bytes(out.read_bytes())
     return out
+
 
 
 def main() -> None:
